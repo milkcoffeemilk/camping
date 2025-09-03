@@ -62,15 +62,13 @@ button:hover { background-color: #45a049; }
 
   <!-- 半價小孩人數 -->
   <label for="halfPriceChildCount">半價小孩人數</label>
-  <div class="hint">小一以上到高中，沒有則填 0</div>
   <input type="number" name="halfPriceChildCount" id="halfPriceChildCount" min="0" value="0" required>
-
+  <div class="hint">小一以上到高中，沒有則填 0</div>
 
   <!-- 幼稚園以下小孩人數 -->
   <label for="youngChildCount">幼稚園以下小孩人數</label>
-  <div class="hint">沒有則填 0</div>
   <input type="number" name="youngChildCount" id="youngChildCount" min="0" value="0" required>
-
+  <div class="hint">沒有則填 0</div>
 
   <!-- 是否夜衝（下拉選單） -->
   <label for="nightAttack">是否夜衝</label>
@@ -90,9 +88,9 @@ button:hover { background-color: #45a049; }
 /** 版本 2.1 **/
 
 // 1️⃣ 替換成你的 Notion API 資訊
-const NOTION_API_KEY = "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";  // Notion Integration Token
-const DATABASE_ID = "20dcb700e2998160a3cdd8b0748c22af";        // Notion Database ID
-const LIFF_ID = "2008039360-KwOXJMdV";             // LINE LIFF ID
+const NOTION_API_KEY = "YOUR_NOTION_API_KEY_HERE";  // Notion Integration Token
+const DATABASE_ID = "YOUR_DATABASE_ID_HERE";        // Notion Database ID
+const LIFF_ID = "2007824757-mvngBGAJ";             // LINE LIFF ID
 
 // 初始化 LIFF 並取得使用者資訊
 async function initLIFF() {
@@ -134,12 +132,12 @@ document.getElementById("eventForm").addEventListener("submit", async (e) => {
       body: JSON.stringify({
         parent: { database_id: DATABASE_ID },
         properties: {
-          "場次_M": { title: [{ text: { content: eventName } }] },
-          "名字_M": { rich_text: [{ text: { content: name } }] },
-          "大人數_M(*1)": { number: adultCount },
-          "小孩數_M(*0.5)": { number: halfPriceChildCount },
-          "幼稚園小孩_M(*0)": { number: youngChildCount },
-          "是否夜衝_M": { checkbox: nightAttack },
+          "露營場次名稱": { title: [{ text: { content: eventName } }] },
+          "填寫者名稱": { rich_text: [{ text: { content: name } }] },
+          "大人人數": { number: adultCount },
+          "半價小孩人數": { number: halfPriceChildCount },
+          "幼稚園以下人數": { number: youngChildCount },
+          "是否夜衝": { checkbox: nightAttack },
           "備註": { rich_text: [{ text: { content: note } }] }
         }
       })
