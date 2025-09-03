@@ -163,12 +163,12 @@
           body: JSON.stringify({
             parent: { database_id: DATABASE_ID },
             properties: {
-              "姓名": { title: [{ text: { content: formData.name } }] },
-              "場次": { select: { name: formData.eventName } },
-              "大人": { number: formData.adultCount },
-              "半價小孩": { number: formData.halfPriceChildCount },
-              "幼稚園以下": { number: formData.youngChildCount },
-              "是否夜衝": { select: { name: formData.nightAttack } },
+              "名字_M": { title: [{ text: { content: formData.name } }] },
+              "場次_M": { select: { name: formData.eventName } },
+              "大人數_M(*1)": { number: formData.adultCount },
+              "小孩數_M(*0.5)": { number: formData.halfPriceChildCount },
+              "幼稚園小孩_M(*0)": { number: formData.youngChildCount },
+              "是否夜衝_M": { select: { name: formData.nightAttack } },
               "備註": { rich_text: [{ text: { content: formData.note } }] },
               "LINE UserId": { rich_text: [{ text: { content: formData.userId } }] }
             }
