@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>露營活動報名表</title>
+<title>露營活動報名表 v1.0</title>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <style>
 body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }
@@ -18,6 +18,7 @@ button:hover { background-color: #45a049; }
 </head>
 <body>
 
+<h2>🏕️ 露營活動報名表 v1.0</h2>
 <div id="userName">🔄 載入中...</div>
 
 <form id="campForm">
@@ -48,11 +49,15 @@ button:hover { background-color: #45a049; }
 </form>
 
 <script>
-const liffId = "YOUR_LIFF_ID_HERE";   // 替換成你的 LIFF ID
-const NOTION_API_KEY = "YOUR_NOTION_API_KEY_HERE"; // Notion API Key
-const DATABASE_ID = "YOUR_DATABASE_ID_HERE";      // Notion Database ID
+/** 版本 1.0 **/
 
-async function initLIFF() {
+// 1️⃣ 請替換以下資訊
+const liffId = "YOUR_LIFF_ID_HERE";             // LINE LIFF ID
+const NOTION_API_KEY = "YOUR_NOTION_API_KEY";   // Notion Integration Token
+const DATABASE_ID = "YOUR_DATABASE_ID";         // Notion Database ID
+
+// 初始化 LIFF 並取得 Profile
+async function main() {
   await liff.init({ liffId });
 
   if (!liff.isLoggedIn()) {
@@ -61,20 +66,24 @@ async function initLIFF() {
   }
 
   try {
+    // ✅ 取得 LINE 使用者資訊
     const profile = await liff.getProfile();
-    const nameInput = document.getElementById("name");
-    nameInput.value = profile.displayName; // 將 LINE 名稱填入 input
     document.getElementById("userName").textContent = `👤 目前登入者：${profile.displayName}`;
+    document.getElementById("name").value = profile.displayName;
+
+    // 可選：把 userId 傳入 dataset
+    document.getElementById("campForm").dataset.userId = profile.userId;
   } catch (err) {
     document.getElementById("userName").textContent = "⚠️ 無法取得使用者資訊";
     console.error(err);
   }
 }
 
-// 表單送出
+// 2️⃣ 表單送出事件
 document.getElementById("campForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  // 取得欄位值
   const name = document.getElementById("name").value;
   const campName = document.getElementById("campName").value;
   const adults = parseInt(document.getElementById("adults").value) || 0;
@@ -114,12 +123,13 @@ document.getElementById("campForm").addEventListener("submit", async (e) => {
     liff.closeWindow();
 
   } catch (err) {
-    console.error("Error submitting form:", err);
+    console.error(err);
     alert("❌ 系統發生錯誤，請稍後再試！");
   }
 });
 
-initLIFF();
+// 3️⃣ 啟動 LIFF
+main();
 </script>
 </body>
 </html>
