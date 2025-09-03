@@ -1,135 +1,161 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>露營活動報名表 v1.0</title>
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<style>
-body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }
-input, select, textarea { display: block; margin-bottom: 10px; width: 100%; padding: 8px; box-sizing: border-box; }
-label { font-weight: bold; display: block; margin-bottom: 4px; }
-.hint { font-size: 0.9em; color: gray; margin-top: -8px; margin-bottom: 8px; }
-#userName { margin-bottom: 20px; font-weight: bold; color: green; text-align: center; }
-.checkbox-group { display: flex; align-items: center; gap: 8px; }
-button { padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%; }
-button:hover { background-color: #45a049; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>露營報名表單</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body { 
+      font-family: sans-serif; 
+      padding: 20px; 
+      max-width: 500px; 
+      margin: auto; 
+      background-color: #f9f9f9;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+    }
+    .hint {
+      font-size: 12px;
+      color: #555;
+      margin-top: -8px;
+      margin-bottom: 10px;
+    }
+    input, select, textarea {
+      display: block;
+      margin-bottom: 15px;
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #userName {
+      margin-bottom: 20px;
+      font-weight: bold;
+      color: green;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
 
-<h2>🏕️ 露營活動報名表 v1.0</h2>
-<div id="userName">🔄 載入中...</div>
+  <h2>🏕️ 露營報名表單</h2>
+  <div id="userName">🔄 載入中...</div>
 
-<form id="campForm">
-  <label for="name">填寫者姓名</label>
-  <input type="text" id="name" name="name" placeholder="自動帶入 LINE 名稱" readonly required>
+  <form id="eventForm">
+    <!-- LINE 使用者名稱 -->
+    <input type="text" name="name" id="name" placeholder="姓名" required readonly>
 
-  <label for="campName">露營場次名稱</label>
-  <input type="text" id="campName" name="campName" placeholder="請輸入露營場次名稱" required>
+    <!-- 露營場次名稱 -->
+    <label for="eventName">露營場次名稱</label>
+    <select name="eventName" id="eventName" required>
+      <option value="">請選擇場次</option>
+      <option value="11/1-11/3 秋季露營">11/1-11/3 秋季露營</option>
+      <option value="12/20-12/22 冬季聖誕露營">12/20-12/22 冬季聖誕露營</option>
+    </select>
 
-  <label for="adults">大人人數</label>
-  <input type="number" id="adults" name="adults" placeholder="請輸入大人人數" min="0" required>
+    <!-- 大人人數 -->
+    <label for="adultCount">大人人數</label>
+    <input type="number" name="adultCount" id="adultCount" min="0" value="0" required>
 
-  <label for="halfPriceKids">半價小孩人數</label>
-  <input type="number" id="halfPriceKids" name="halfPriceKids" placeholder="請輸入半價小孩人數" min="0" required>
-  <div class="hint">小1以上到高中，沒有則填 0</div>
+    <!-- 半價小孩人數 -->
+    <label for="halfPriceChildCount">半價小孩人數</label>
+    <input type="number" name="halfPriceChildCount" id="halfPriceChildCount" min="0" value="0" required>
+    <div class="hint">小一以上到高中，沒有則填 0</div>
 
-  <label for="freeKids">幼稚園以下小孩人數</label>
-  <input type="number" id="freeKids" name="freeKids" placeholder="請輸入幼稚園以下小孩人數" min="0" required>
-  <div class="hint">沒有則填 0</div>
+    <!-- 幼稚園以下小孩人數 -->
+    <label for="youngChildCount">幼稚園以下小孩人數</label>
+    <input type="number" name="youngChildCount" id="youngChildCount" min="0" value="0" required>
+    <div class="hint">沒有則填 0</div>
 
-  <label>是否夜衝</label>
-  <div class="checkbox-group">
-    <input type="checkbox" id="nightRush" name="nightRush">
-    <label for="nightRush">是</label>
-  </div>
+    <!-- 是否夜衝 -->
+    <div class="checkbox-group">
+      <input type="checkbox" name="nightAttack" id="nightAttack">
+      <label for="nightAttack">是否夜衝</label>
+    </div>
 
-  <button type="submit">送出報名</button>
-</form>
+    <!-- 備註 -->
+    <textarea name="note" id="note" placeholder="備註 (選填)"></textarea>
 
-<script>
-/** 版本 1.0 **/
+    <button type="submit">送出報名</button>
+  </form>
 
-// 1️⃣ 請替換以下資訊
-const liffId = "YOUR_LIFF_ID_HERE";             // LINE LIFF ID
-const NOTION_API_KEY = "YOUR_NOTION_API_KEY";   // Notion Integration Token
-const DATABASE_ID = "YOUR_DATABASE_ID";         // Notion Database ID
+  <script>
+    const liffId = "2007824757-mvngBGAJ"; // 替換成你的 LIFF ID
+    const scriptURL = "https://script.google.com/macros/s/xxxxxxxxxxxxxxxxxxxx/exec"; // 替換成你的 GAS Web App URL
 
-// 初始化 LIFF 並取得 Profile
-async function main() {
-  await liff.init({ liffId });
+    async function main() {
+      await liff.init({ liffId });
 
-  if (!liff.isLoggedIn()) {
-    liff.login();
-    return;
-  }
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
 
-  try {
-    // ✅ 取得 LINE 使用者資訊
-    const profile = await liff.getProfile();
-    document.getElementById("userName").textContent = `👤 目前登入者：${profile.displayName}`;
-    document.getElementById("name").value = profile.displayName;
-
-    // 可選：把 userId 傳入 dataset
-    document.getElementById("campForm").dataset.userId = profile.userId;
-  } catch (err) {
-    document.getElementById("userName").textContent = "⚠️ 無法取得使用者資訊";
-    console.error(err);
-  }
-}
-
-// 2️⃣ 表單送出事件
-document.getElementById("campForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  // 取得欄位值
-  const name = document.getElementById("name").value;
-  const campName = document.getElementById("campName").value;
-  const adults = parseInt(document.getElementById("adults").value) || 0;
-  const halfPriceKids = parseInt(document.getElementById("halfPriceKids").value) || 0;
-  const freeKids = parseInt(document.getElementById("freeKids").value) || 0;
-  const nightRush = document.getElementById("nightRush").checked;
-
-  try {
-    const res = await fetch("https://api.notion.com/v1/pages", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${NOTION_API_KEY}`,
-        "Content-Type": "application/json",
-        "Notion-Version": "2022-06-28"
-      },
-      body: JSON.stringify({
-        parent: { database_id: DATABASE_ID },
-        properties: {
-          "露營場次名稱": { title: [{ text: { content: campName } }] },
-          "填寫者名稱": { rich_text: [{ text: { content: name } }] },
-          "大人人數": { number: adults },
-          "半價小孩人數": { number: halfPriceKids },
-          "幼稚園以下人數": { number: freeKids },
-          "是否夜衝": { checkbox: nightRush }
-        }
-      })
-    });
-
-    if (!res.ok) {
-      const errData = await res.json();
-      console.error("Notion API Error:", errData);
-      alert("❌ 報名失敗，請稍後再試！");
-      return;
+      try {
+        const profile = await liff.getProfile();
+        document.getElementById("userName").textContent = `👤 目前登入者：${profile.displayName}`;
+        document.getElementById("name").value = profile.displayName;
+        document.getElementById("eventForm").dataset.userId = profile.userId;
+      } catch (err) {
+        document.getElementById("userName").textContent = "⚠️ 無法取得使用者資訊";
+        console.error(err);
+      }
     }
 
-    alert("✅ 報名成功！");
-    liff.closeWindow();
+    document.getElementById("eventForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
 
-  } catch (err) {
-    console.error(err);
-    alert("❌ 系統發生錯誤，請稍後再試！");
-  }
-});
+      // 附加 LINE UserID
+      const userId = form.dataset.userId || "";
+      formData.append("userId", userId);
 
-// 3️⃣ 啟動 LIFF
-main();
-</script>
+      fetch(scriptURL, { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "success") {
+            alert("✅ 報名成功！資料已寫入 Notion");
+            liff.closeWindow();
+          } else {
+            alert("❌ 報名失敗：" + data.message);
+          }
+        })
+        .catch(err => {
+          alert("❌ 系統錯誤，請稍後再試！");
+          console.error(err);
+        });
+    });
+
+    main();
+  </script>
 </body>
 </html>
