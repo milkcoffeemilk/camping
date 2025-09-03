@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>露營報名表單</title>
+  <title>活動報名表單</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     body { 
@@ -17,17 +17,6 @@
       text-align: center;
       color: #333;
     }
-    label {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 5px;
-    }
-    .hint {
-      font-size: 12px;
-      color: #555;
-      margin-top: -8px;
-      margin-bottom: 10px;
-    }
     input, select, textarea {
       display: block;
       margin-bottom: 15px;
@@ -36,12 +25,6 @@
       box-sizing: border-box;
       border: 1px solid #ccc;
       border-radius: 8px;
-    }
-    .checkbox-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 15px;
     }
     button {
       background-color: #4CAF50;
@@ -66,42 +49,27 @@
 </head>
 <body>
 
-  <h2>🏕️ 露營報名表單</h2>
+  <h2>🎄 活動報名表單</h2>
   <div id="userName">🔄 載入中...</div>
 
   <form id="eventForm">
-    <!-- LINE 使用者名稱 -->
     <input type="text" name="name" id="name" placeholder="姓名" required readonly>
 
-    <!-- 露營場次名稱 -->
-    <label for="eventName">露營場次名稱</label>
     <select name="eventName" id="eventName" required>
-      <option value="">請選擇場次</option>
-      <option value="11/1-11/3 秋季露營">11/1-11/3 秋季露營</option>
-      <option value="12/20-12/22 冬季聖誕露營">12/20-12/22 冬季聖誕露營</option>
+      <option value="">請選擇活動</option>
+      <option value="聖誕節親子活動">聖誕節親子活動</option>
+      <option value="期末聯歡會">期末聯歡會</option>
+      <option value="家長座談會">家長座談會</option>
     </select>
 
-    <!-- 大人人數 -->
-    <label for="adultCount">大人人數</label>
-    <input type="number" name="adultCount" id="adultCount" min="0" value="0" required>
+    <select name="attend" id="attend" required>
+      <option value="">是否參加</option>
+      <option value="參加">參加</option>
+      <option value="不參加">不參加</option>
+    </select>
 
-    <!-- 半價小孩人數 -->
-    <label for="halfPriceChildCount">半價小孩人數</label>
-    <input type="number" name="halfPriceChildCount" id="halfPriceChildCount" min="0" value="0" required>
-    <div class="hint">小一以上到高中，沒有則填 0</div>
+    <input type="number" name="participantCount" id="participantCount" placeholder="參加人數" min="1">
 
-    <!-- 幼稚園以下小孩人數 -->
-    <label for="youngChildCount">幼稚園以下小孩人數</label>
-    <input type="number" name="youngChildCount" id="youngChildCount" min="0" value="0" required>
-    <div class="hint">沒有則填 0</div>
-
-    <!-- 是否夜衝 -->
-    <div class="checkbox-group">
-      <input type="checkbox" name="nightAttack" id="nightAttack">
-      <label for="nightAttack">是否夜衝</label>
-    </div>
-
-    <!-- 備註 -->
     <textarea name="note" id="note" placeholder="備註 (選填)"></textarea>
 
     <button type="submit">送出報名</button>
@@ -135,7 +103,6 @@
       const form = e.target;
       const formData = new FormData(form);
 
-      // 附加 LINE UserID
       const userId = form.dataset.userId || "";
       formData.append("userId", userId);
 
