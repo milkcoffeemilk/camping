@@ -79,8 +79,11 @@
     const liffId = "2008043659-x9g3OvbJ"; // 替換成你的 LIFF ID
     const scriptURL = "https://script.google.com/macros/s/AKfycbzer_kDpbxabdCvpvtMIRJmvhAY4xmpV1cZJo11kV9b0nZZNsknrvgrNEE_z0Xot_uI/exec";
 
-    // GAS URL：從 Notion 撈資料
-    const notionSessionURL = "https://script.google.com/macros/s/AKfycbzer_kDpbxabdCvpvtMIRJmvhAY4xmpV1cZJo11kV9b0nZZNsknrvgrNEE_z0Xot_uI/exec"; // 替換為部署後的 URL
+  const DATABASE_ID = "20dcb700e2998170b800d171037cbb43"; // 你的 Notion 資料庫 ID
+  const NOTION_API_KEY = "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"; // Notion 整合金鑰
+
+  const notionSessionURL = `https://api.notion.com/v1/databases/${DATABASE_ID}/query`;
+
 
     /** 初始化 LIFF */
     async function main() {
