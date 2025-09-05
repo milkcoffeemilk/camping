@@ -7,5 +7,3 @@ const CONFIG = {
 };
 
 
-https://script.google.com/macros/s/AKfycbz6Nqq7OrbpZuFyZI7pYQJbdfPgR7wgCuYp5Cjy9xPJ7tbKRi3T3LShXCnOqJskiaES/exec
-https://script.google.com/macros/s/AKfycbz6Nqq7OrbpZuFyZI7pYQJbdfPgR7wgCuYp5Cjy9xPJ7tbKRi3T3LShXCnOqJskiaES/exec"
