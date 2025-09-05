@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>露營報名表單 v1.21</title>
+  <title>露營報名表單 v1.11</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <!-- 載入 config.js -->
   <script src="config.js"></script>
+
   <style>
     body {
       font-family: sans-serif;
@@ -126,7 +127,7 @@
         select.innerHTML = '<option value="">請選擇場次</option>';
         data.forEach(item => {
           const option = document.createElement('option');
-          option.value = item.id; // 使用 Notion 場次 ID
+          option.value = item.id; // 這裡改成使用 Notion 場次 ID
           option.textContent = `${item.location} (${item.date})`; // 顯示地點 + 日期
           select.appendChild(option);
         });
