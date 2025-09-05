@@ -1,31 +1,28 @@
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-      max-width: 500px;
-      margin: auto;
-      background-color: #f9f9f9;
-    }
-    h2 { text-align: center; color: #333; }
-    label { font-weight: bold; display: block; margin-bottom: 5px; }
-    .hint { font-size: 12px; color: #555; margin-top: -8px; margin-bottom: 10px; }
-    input, select, textarea {
-      display: block;
-      margin-bottom: 15px;
-      width: 100%;
-      padding: 8px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-    button {
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      width: 100%;
-      font-size: 16px;
-    }
-    button:hover { background-color: #45a049; }
-    #userName { margin-bottom: 20px; font-weight: bold; color: green; text-align: center; }
+/* assets/css/style.css */
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+form {
+  max-width: 400px;
+  margin: auto;
+}
+
+select, input, button {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 8px;
+}
+
+button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #45a049;
+}
