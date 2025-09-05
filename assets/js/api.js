@@ -1,47 +1,65 @@
-// assets/js/api.js
+const API = {
+  /** 取得場次資料 **/
+  async loadSessions() {
+    const notionSessionURL = `${CONFIG.scriptURL}?action=getUpcomingEvents`;
+    const select = document.getElementById('eventName');
+    select.innerHTML = '<option value="">載入中...</option>';
 
-/**
- * 從 Notion 取得露營場次資料
- * 僅抓 End_Date 大於今天的項目
- */
-async function fetchCampSessions() {
-  try {
-    const response = await fetch(`${CONFIG.GAS_URL}?action=getSessions`);
-    const result = await response.json();
+    try {
+      const res = await fetch(notionSessionURL);
+      const data = await res.json();
 
-    if (!result || !result.data) {
-      throw new Error("無資料回傳");
+      console.log("取得到的場次資料：", data); // 除錯用
+
+      if (!data || data.length === 0) {
+        select.innerHTML = '<option value="">目前無可報名場次</option>';
+        return;
+      }
+
+      select.innerHTML = '<option value="">請選擇場次</option>';
+      data.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = `${item.location} (${item.date})`;
+        select.appendChild(option);
+      });
+    } catch (err) {
+      console.error('載入場次失敗：', err);
+      select.innerHTML = '<option value="">載入失敗</option>';
+    }
+  },
+
+  /** 表單送出 **/
+  async submitForm(e) {
+    const form = e.target;
+
+    // 驗證夜衝必填
+    if (document.getElementById("nightAttack").value === "") {
+      alert("請選擇是否夜衝");
+      return;
     }
 
-    return result.data;
-  } catch (error) {
-    console.error("取得場次資料失敗:", error);
-    throw error;
-  }
-}
+    const formData = new FormData(form);
+    const userId = form.dataset.userId || "";
+    const noteField = formData.get("note") || "";
+    formData.set("note", `${noteField}\nLINE UserId: ${userId}`);
 
-/**
- * 將報名資料寫入 Google Sheets 與 Notion
- */
-async function submitRegistration(formData) {
-  try {
-    const response = await fetch(CONFIG.GAS_URL, {
-      method: "POST",
-      body: JSON.stringify(formData),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    try {
+      const res = await fetch(CONFIG.scriptURL, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
 
-    const result = await response.json();
-
-    if (!result.success) {
-      throw new Error(result.message || "資料寫入失敗");
+      if (data.status === "success") {
+        alert("✅ 報名成功！資料已寫入 Google Sheets 與 Notion");
+        liff.closeWindow();
+      } else {
+        alert("❌ 報名失敗：" + data.message);
+      }
+    } catch (err) {
+      alert("❌ 系統錯誤，請稍後再試！");
+      console.error(err);
     }
-
-    return result;
-  } catch (error) {
-    console.error("送出報名資料失敗:", error);
-    throw error;
   }
-}
+};

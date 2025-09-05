@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>露營報名表單</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <!-- 載入 config.js 與 api.js -->
   <script src="assets/js/config.js"></script>
-  <script src="assets/js/api.js"></script>
-
   <style>
     body {
       font-family: sans-serif;
@@ -45,7 +42,7 @@
 </head>
 <body>
 
-  <h2>🏕️ 露營報名表單 V1.05</h2>
+  <h2>🏕️ 露營報名表單 V1.04</h2>
   <div id="userName">🔄 載入中...</div>
 
   <form id="eventForm">
@@ -80,9 +77,18 @@
   </form>
 
   <script>
-    /** 1. 初始化 LIFF **/
+    /** 1. 設定變數 **/
+    //const liffId = "2008043659-x9g3OvbJ"; // 你的 LIFF ID
+    //const scriptURL = "https://script.google.com/macros/s/AKfycbz6Nqq7OrbpZuFyZI7pYQJbdfPgR7wgCuYp5Cjy9xPJ7tbKRi3T3LShXCnOqJskiaES/exec"; // GAS Web App URL
+
+    const liffId = CONFIG.LIFF_ID;
+    const scriptURL = CONFIG.scriptURL;
+
+    const notionSessionURL = `${scriptURL}?action=getUpcomingEvents`; // 用來載入場次資料
+
+    /** 2. 初始化 LIFF **/
     async function main() {
-      await liff.init({ liffId: CONFIG.LIFF_ID });
+      await liff.init({ liffId });
 
       if (!liff.isLoggedIn()) {
         liff.login();
@@ -96,17 +102,73 @@
         document.getElementById("eventForm").dataset.userId = profile.userId;
 
         // 取得場次資料
-        API.loadSessions();
+        loadSessions();
       } catch (err) {
         document.getElementById("userName").textContent = "⚠️ 無法取得使用者資訊";
         console.error(err);
       }
     }
 
-    /** 2. 綁定表單送出事件 **/
+    /** 3. 從 GAS 載入 Notion 場次資料 **/
+    async function loadSessions() {
+      const select = document.getElementById('eventName');
+      select.innerHTML = '<option value="">載入中...</option>';
+
+      try {
+        const res = await fetch(notionSessionURL);
+        const data = await res.json();
+
+        console.log("取得到的場次資料：", data); // 除錯用
+
+        if (!data || data.length === 0) {
+          select.innerHTML = '<option value="">目前無可報名場次</option>';
+          return;
+        }
+
+        // 將資料加入下拉選單
+        select.innerHTML = '<option value="">請選擇場次</option>';
+        data.forEach(item => {
+          const option = document.createElement('option');
+          option.value = item.id; // 這裡改成使用 Notion 場次 ID
+          option.textContent = `${item.location} (${item.date})`; // 顯示地點 + 日期
+          select.appendChild(option);
+        });
+      } catch (err) {
+        console.error('載入場次失敗：', err);
+        select.innerHTML = '<option value="">載入失敗</option>';
+      }
+    }
+
+    /** 4. 表單送出 **/
     document.getElementById("eventForm").addEventListener("submit", e => {
       e.preventDefault();
-      API.submitForm(e);
+      const form = e.target;
+
+      // 驗證夜衝必填
+      if (document.getElementById("nightAttack").value === "") {
+        alert("請選擇是否夜衝");
+        return;
+      }
+
+      const formData = new FormData(form);
+      const userId = form.dataset.userId || "";
+      const noteField = formData.get("note") || "";
+      formData.set("note", `${noteField}\nLINE UserId: ${userId}`);
+
+      fetch(scriptURL, { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "success") {
+            alert("✅ 報名成功！資料已寫入 Google Sheets 與 Notion");
+            liff.closeWindow();
+          } else {
+            alert("❌ 報名失敗：" + data.message);
+          }
+        })
+        .catch(err => {
+          alert("❌ 系統錯誤，請稍後再試！");
+          console.error(err);
+        });
     });
 
     main();
