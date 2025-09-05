@@ -52,7 +52,7 @@ const API = {
       const data = await res.json();
 
       if (data.status === "success") {
-        alert("✅ 報名成功！資料已寫入 Google Sheets 與 Notion");
+        alert("✅ 報名成功！資料已寫入 Google Sheets");
         liff.closeWindow();
       } else {
         alert("❌ 報名失敗：" + data.message);
