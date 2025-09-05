@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>露營報名表單</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <!-- 載入 config.js、ui.js 與 api.js -->
+  <!-- 載入 config.js 與 api.js -->
   <script src="assets/js/config.js"></script>
-  <script src="assets/js/ui.js"></script>
   <script src="assets/js/api.js"></script>
 
   <style>
@@ -81,7 +80,7 @@
   </form>
 
   <script>
-    /** 初始化應用程式 **/
+    /** 1. 初始化 LIFF **/
     async function main() {
       await liff.init({ liffId: CONFIG.LIFF_ID });
 
@@ -92,16 +91,23 @@
 
       try {
         const profile = await liff.getProfile();
-        UI.updateUserInfo(profile);
-        UI.loadSessions();
+        document.getElementById("userName").textContent = `👤 目前登入者：${profile.displayName}`;
+        document.getElementById("name").value = profile.displayName;
+        document.getElementById("eventForm").dataset.userId = profile.userId;
+
+        // 取得場次資料
+        API.loadSessions();
       } catch (err) {
-        UI.showUserError();
+        document.getElementById("userName").textContent = "⚠️ 無法取得使用者資訊";
         console.error(err);
       }
     }
 
-    /** 綁定事件 **/
-    UI.bindFormEvents();
+    /** 2. 綁定表單送出事件 **/
+    document.getElementById("eventForm").addEventListener("submit", e => {
+      e.preventDefault();
+      API.submitForm(e);
+    });
 
     main();
   </script>
