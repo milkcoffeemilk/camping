@@ -1,12 +1,12 @@
 const API = {
-  /** 取得場次資料 (由 GAS 回傳) **/
+  /** 取得場次資料 **/
   async loadSessions() {
-    const sessionURL = `${CONFIG.scriptURL}?action=getUpcomingEvents`;
+    const notionSessionURL = `${CONFIG.scriptURL}?action=getUpcomingEvents`;
     const select = document.getElementById('eventName');
     select.innerHTML = '<option value="">載入中...</option>';
 
     try {
-      const res = await fetch(sessionURL);
+      const res = await fetch(notionSessionURL);
       const data = await res.json();
 
       console.log("取得到的場次資料：", data); // 除錯用
@@ -29,7 +29,7 @@ const API = {
     }
   },
 
-  /** 表單送出，只寫入 Google Sheets **/
+  /** 表單送出 **/
   async submitForm(e) {
     const form = e.target;
 
@@ -52,7 +52,7 @@ const API = {
       const data = await res.json();
 
       if (data.status === "success") {
-        alert("✅ 報名成功！資料已寫入 Google Sheets");
+        alert("✅ 報名成功！資料已寫入 Google Sheets 與 Notion");
         liff.closeWindow();
       } else {
         alert("❌ 報名失敗：" + data.message);
