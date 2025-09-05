@@ -3,11 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>露營報名表單 v1.21</title>
+  <title>露營報名表單</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <!-- 載入 config.js -->
-  <script src="config.js"></script>
-
   <style>
     body {
       font-family: sans-serif;
@@ -44,7 +41,7 @@
 </head>
 <body>
 
-  <h2>🏕️ 露營報名表單 v1.21</h2>
+  <h2>🏕️ 露營報名表單 v0</h2>
   <div id="userName">🔄 載入中...</div>
 
   <form id="eventForm">
@@ -79,9 +76,9 @@
   </form>
 
   <script>
-    /** 1. 使用 config.js 中的設定 **/
-    const liffId = CONFIG.LIFF_ID;
-    const scriptURL = CONFIG.SCRIPT_URL;
+    /** 1. 設定變數 **/
+    const liffId = "2008043659-x9g3OvbJ"; // 你的 LIFF ID
+    const scriptURL = "https://script.google.com/macros/s/AKfycbz6Nqq7OrbpZuFyZI7pYQJbdfPgR7wgCuYp5Cjy9xPJ7tbKRi3T3LShXCnOqJskiaES/exec"; // GAS Web App URL
     const notionSessionURL = `${scriptURL}?action=getUpcomingEvents`; // 用來載入場次資料
 
     /** 2. 初始化 LIFF **/
