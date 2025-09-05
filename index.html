@@ -76,15 +76,12 @@
   </form>
 
   <script>
-    const liffId = "2008043659-x9g3OvbJ"; // 替換成你的 LIFF ID
-    const scriptURL = "https://script.google.com/macros/s/AKfycbz6Nqq7OrbpZuFyZI7pYQJbdfPgR7wgCuYp5Cjy9xPJ7tbKRi3T3LShXCnOqJskiaES/exec";
+    /** 1. 設定變數 **/
+    const liffId = "2008043659-x9g3OvbJ"; // 你的 LIFF ID
+    const scriptURL = "https://script.google.com/macros/s/AKfycbz6Nqq7OrbpZuFyZI7pYQJbdfPgR7wgCuYp5Cjy9xPJ7tbKRi3T3LShXCnOqJskiaES/exec"; // GAS Web App URL
+    const notionSessionURL = `${scriptURL}?action=getUpcomingEvents`; // 用來載入場次資料
 
-  const DATABASE_ID = "20dcb700e2998170b800d171037cbb43"; // 你的 Notion 資料庫 ID
-  const NOTION_API_KEY = "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"; // Notion 整合金鑰
- // const notionSessionURL = `https://api.notion.com/v1/databases/${DATABASE_ID}/query`;
-const notionSessionURL= "20dcb700e2998170b800d171037cbb43";
-
-    /** 初始化 LIFF */
+    /** 2. 初始化 LIFF **/
     async function main() {
       await liff.init({ liffId });
 
@@ -107,7 +104,7 @@ const notionSessionURL= "20dcb700e2998170b800d171037cbb43";
       }
     }
 
-    /** 從 GAS 載入 Notion 場次資料 */
+    /** 3. 從 GAS 載入 Notion 場次資料 **/
     async function loadSessions() {
       const select = document.getElementById('eventName');
       select.innerHTML = '<option value="">載入中...</option>';
@@ -115,6 +112,8 @@ const notionSessionURL= "20dcb700e2998170b800d171037cbb43";
       try {
         const res = await fetch(notionSessionURL);
         const data = await res.json();
+
+        console.log("取得到的場次資料：", data); // 除錯用
 
         if (!data || data.length === 0) {
           select.innerHTML = '<option value="">目前無可報名場次</option>';
@@ -125,8 +124,8 @@ const notionSessionURL= "20dcb700e2998170b800d171037cbb43";
         select.innerHTML = '<option value="">請選擇場次</option>';
         data.forEach(item => {
           const option = document.createElement('option');
-          option.value = item.name;
-          option.textContent = `${item.name} (${item.endDate})`;
+          option.value = item.id; // 這裡改成使用 Notion 場次 ID
+          option.textContent = `${item.location} (${item.date})`; // 顯示地點 + 日期
           select.appendChild(option);
         });
       } catch (err) {
@@ -135,7 +134,7 @@ const notionSessionURL= "20dcb700e2998170b800d171037cbb43";
       }
     }
 
-    /** 表單送出 */
+    /** 4. 表單送出 **/
     document.getElementById("eventForm").addEventListener("submit", e => {
       e.preventDefault();
       const form = e.target;
