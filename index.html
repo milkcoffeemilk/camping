@@ -42,7 +42,7 @@
 </head>
 <body>
 
-  <h2>🏕️ 露營報名表單 V1.00</h2>
+  <h2>🏕️ 露營報名表單 V1.01</h2>
   <div id="userName">🔄 載入中...</div>
 
   <form id="eventForm">
@@ -78,11 +78,11 @@
 
   <script>
     /** 1. 設定變數 **/
-    //const liffId = "2008043659-x9g3OvbJ"; // 你的 LIFF ID
-    //const scriptURL = "https://script.google.com/macros/s/AKfycbz6Nqq7OrbpZuFyZI7pYQJbdfPgR7wgCuYp5Cjy9xPJ7tbKRi3T3LShXCnOqJskiaES/exec"; // GAS Web App URL
+    const liffId = "2008043659-x9g3OvbJ"; // 你的 LIFF ID
+    const scriptURL = "https://script.google.com/macros/s/AKfycbz6Nqq7OrbpZuFyZI7pYQJbdfPgR7wgCuYp5Cjy9xPJ7tbKRi3T3LShXCnOqJskiaES/exec"; // GAS Web App URL
 
-    const liffId = CONFIG.LIFF_ID;
-    const scriptURL = CONFIG.SCRIPT_URL;
+    //const liffId = CONFIG.LIFF_ID;
+    //const scriptURL = CONFIG.SCRIPT_URL;
 
     const notionSessionURL = `${scriptURL}?action=getUpcomingEvents`; // 用來載入場次資料
 
