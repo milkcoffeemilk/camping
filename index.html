@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>大富翁：物理簡單機械大冒險 (線上雙人版) v1.3.0</title>
+  <title>大富翁：物理簡單機械大冒險 (線上雙人版) v1.3.1</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -87,7 +87,7 @@
   <header class="max-w-7xl mx-auto w-full flex flex-wrap items-center justify-between bg-slate-800/80 backdrop-blur border border-slate-700 px-4 py-2.5 rounded-2xl mb-2 gap-2 shadow-lg relative">
     <div class="flex items-center gap-3">
       <span class="text-amber-400 font-black text-lg flex items-center gap-2">
-        <i class="fa-solid fa-atom text-xl animate-spin"></i> 立體學院大富翁 <span class="text-xs bg-amber-500 text-slate-900 px-2 py-0.5 rounded-full font-bold">v1.3.0</span>
+        <i class="fa-solid fa-atom text-xl animate-spin"></i> 立體學院大富翁 <span class="text-xs bg-amber-500 text-slate-900 px-2 py-0.5 rounded-full font-bold">v1.3.1</span>
       </span>
       <span id="room-badge" class="bg-slate-700 text-slate-300 px-3 py-1 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 border border-slate-600">
         <i class="fa-solid fa-plug text-yellow-400"></i> <span id="room-status-text">連線準備中...</span>
@@ -214,7 +214,7 @@
       
       <div class="text-center mb-6">
         <div class="text-5xl text-amber-400 mb-2"><i class="fa-solid fa-wifi"></i></div>
-        <h2 class="text-2xl sm:text-3xl font-black text-white">線上雙人對戰大廳</h2>
+        <h2 class="text-2xl sm:text-3xl font-black text-white flex justify-center items-center gap-2">線上雙人對戰大廳 <span class="text-sm bg-amber-500 text-slate-900 px-2 py-0.5 rounded-full font-bold">v1.3.1</span></h2>
         <p class="text-slate-300 text-sm mt-1">創建房間傳給朋友，或輸入房間號碼跨裝置對戰！</p>
       </div>
 
@@ -266,32 +266,17 @@
   </div>
 
   <!-- 彈窗 Modal: 對決動態訊息卡 -->
-  <div id="modal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden flex flex-col justify-between items-center p-3 sm:p-6 z-50 overflow-y-auto">
-    <div class="w-full max-w-2xl my-auto flex flex-col gap-4 py-2">
+  <div id="modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] hidden flex flex-col justify-center items-center p-3 sm:p-6 z-50 overflow-y-auto">
+    <div class="w-full max-w-md my-auto flex flex-col gap-4 py-2">
       
-      <!-- 🔝 玩家 2 / 對向 視角卡片 -->
-      <div id="modal-card-p2" class="bg-slate-800 border-4 border-amber-500/70 rounded-3xl p-4 sm:p-6 text-center shadow-2xl transition-transform">
-        <div id="modal-icon-p2" class="text-4xl sm:text-5xl mb-3 text-amber-400">
+      <!-- 單一視角卡片 -->
+      <div id="modal-card-main" class="bg-slate-800 border-4 border-amber-500/70 rounded-3xl p-4 sm:p-6 text-center shadow-[0_0_40px_rgba(245,158,11,0.3)] transition-transform scale-95 animate-[pulse_0.2s_ease-out_forwards] hover:scale-100">
+        <div id="modal-icon-main" class="text-4xl sm:text-5xl mb-3 text-amber-400">
           <i class="fa-solid fa-circle-info"></i>
         </div>
-        <h3 id="modal-title-p2" class="text-xl sm:text-3xl font-black mb-2 text-white">訊息標題</h3>
-        <div id="modal-desc-p2" class="text-slate-100 text-sm sm:text-base font-bold mb-4 leading-relaxed">訊息內容...</div>
-        <div id="modal-actions-p2" class="flex flex-wrap gap-3 justify-center"></div>
-      </div>
-
-      <!-- ⚡ 中央標示 -->
-      <div class="flex items-center justify-center gap-2 text-amber-400 text-xs sm:text-sm font-black tracking-widest uppercase my-1">
-        <i class="fa-solid fa-rotate text-cyan-400 text-base"></i> 即時同步對決訊息 <i class="fa-solid fa-rotate text-cyan-400 text-base"></i>
-      </div>
-
-      <!-- 🔻 玩家 1 視角卡片 -->
-      <div id="modal-card-p1" class="bg-slate-800 border-4 border-amber-500/70 rounded-3xl p-4 sm:p-6 text-center shadow-2xl transition-transform">
-        <div id="modal-icon-p1" class="text-4xl sm:text-5xl mb-3 text-amber-400">
-          <i class="fa-solid fa-circle-info"></i>
-        </div>
-        <h3 id="modal-title-p1" class="text-xl sm:text-3xl font-black mb-2 text-white">訊息標題</h3>
-        <div id="modal-desc-p1" class="text-slate-100 text-sm sm:text-base font-bold mb-4 leading-relaxed">訊息內容...</div>
-        <div id="modal-actions-p1" class="flex flex-wrap gap-3 justify-center"></div>
+        <h3 id="modal-title-main" class="text-xl sm:text-2xl font-black mb-2 text-white">訊息標題</h3>
+        <div id="modal-desc-main" class="text-slate-100 text-sm sm:text-base font-bold mb-4 leading-relaxed">訊息內容...</div>
+        <div id="modal-actions-main" class="flex flex-col sm:flex-row flex-wrap gap-3 justify-center"></div>
       </div>
 
     </div>
@@ -630,27 +615,34 @@
           if (tileData.type === "physics") initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-amber-400 bg-amber-950/90 shadow-lg shadow-amber-950/50 transition-all min-h-0 min-w-0 text-amber-300";
           if (tileData.type === "chance" || tileData.type === "fate") initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-indigo-400 bg-indigo-950/90 shadow-lg shadow-indigo-950/50 transition-all min-h-0 min-w-0 text-indigo-300";
           if (tileData.type === "tax") initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-rose-400 bg-rose-950/90 shadow-lg shadow-rose-950/50 transition-all min-h-0 min-w-0 text-rose-300";
+          if (tileData.type === "corner") initialBaseStyle = "road-tile relative flex items-center justify-center p-2.5 rounded-2xl border-4 border-slate-500 bg-slate-800/50 shadow-inner transition-all min-h-0 min-w-0 text-slate-400";
 
           if (f !== currentFloorView) initialBaseStyle += " hidden";
 
           tileEl.className = initialBaseStyle;
           
-          let tileContent = `
-            <div class="flex items-start justify-between gap-1 w-full">
-              <span class="truncate text-sm sm:text-base font-black text-white leading-tight">${tileData.name}</span>
-              <span id="tile-badge-${f}-${tileData.id}" class="shrink-0"></span>
-            </div>
-          `;
+          let tileContent = "";
           
-          if (tileData.type === "property") {
-            tileContent += `
-              <div class="flex items-center justify-between my-auto w-full pt-1">
-                <span class="text-sm sm:text-base font-black text-amber-300" id="tile-price-${f}-${tileData.id}">$${tileData.price}</span>
-                <span class="flex gap-0.5 text-sm text-amber-400" id="tile-houses-${f}-${tileData.id}"></span>
+          if (tileData.type === "corner") {
+            tileContent = `<div class="text-4xl sm:text-5xl my-auto text-center opacity-70"><i class="fa-solid ${tileData.icon}"></i></div>`;
+          } else {
+            tileContent = `
+              <div class="flex items-start justify-between gap-1 w-full">
+                <span class="truncate text-sm sm:text-base font-black text-white leading-tight">${tileData.name}</span>
+                <span id="tile-badge-${f}-${tileData.id}" class="shrink-0"></span>
               </div>
             `;
-          } else if (tileData.icon) {
-            tileContent += `<div class="text-2xl sm:text-3xl my-auto text-center opacity-90"><i class="fa-solid ${tileData.icon}"></i></div>`;
+            
+            if (tileData.type === "property") {
+              tileContent += `
+                <div class="flex items-center justify-between my-auto w-full pt-1">
+                  <span class="text-sm sm:text-base font-black text-amber-300" id="tile-price-${f}-${tileData.id}">$${tileData.price}</span>
+                  <span class="flex gap-0.5 text-sm text-amber-400" id="tile-houses-${f}-${tileData.id}"></span>
+                </div>
+              `;
+            } else if (tileData.icon) {
+              tileContent += `<div class="text-2xl sm:text-3xl my-auto text-center opacity-90"><i class="fa-solid ${tileData.icon}"></i></div>`;
+            }
           }
 
           let directionHTML = "";
@@ -1293,60 +1285,59 @@
       const quiz = questionsDB[Math.floor(Math.random() * questionsDB.length)];
       const isMyTurnToAct = (!isOnlineMode) || (myPlayerIndex === p.id);
 
-      ["p1", "p2"].forEach(target => {
-        const modalIcon = document.getElementById(`modal-icon-${target}`);
-        const modalTitle = document.getElementById(`modal-title-${target}`);
-        const modalDesc = document.getElementById(`modal-desc-${target}`);
-        const actions = document.getElementById(`modal-actions-${target}`);
+      const target = "main";
+      const modalIcon = document.getElementById(`modal-icon-${target}`);
+      const modalTitle = document.getElementById(`modal-title-${target}`);
+      const modalDesc = document.getElementById(`modal-desc-${target}`);
+      const actions = document.getElementById(`modal-actions-${target}`);
 
-        if (modalIcon) {
-          modalIcon.className = "text-4xl sm:text-5xl mb-3 text-amber-400";
-          modalIcon.innerHTML = `<i class="fa-solid fa-brain"></i>`;
-        }
-        if (modalTitle) modalTitle.innerText = quiz.title;
-        if (modalDesc) {
-          modalDesc.innerHTML = `
-            <div class="text-left bg-slate-900 p-4 rounded-2xl border-2 border-slate-700 mb-3">
-              <p class="font-black text-amber-300 text-sm sm:text-base leading-snug">${quiz.question}</p>
-            </div>
-          `;
-        }
+      if (modalIcon) {
+        modalIcon.className = "text-4xl sm:text-5xl mb-3 text-amber-400";
+        modalIcon.innerHTML = `<i class="fa-solid fa-brain"></i>`;
+      }
+      if (modalTitle) modalTitle.innerText = quiz.title;
+      if (modalDesc) {
+        modalDesc.innerHTML = `
+          <div class="text-left bg-slate-900 p-4 rounded-2xl border-2 border-slate-700 mb-3">
+            <p class="font-black text-amber-300 text-sm sm:text-base leading-snug">${quiz.question}</p>
+          </div>
+        `;
+      }
 
-        if (actions) {
-          actions.innerHTML = "";
-          if (isMyTurnToAct) {
-            quiz.options.forEach((opt, idx) => {
-              const btn = document.createElement("button");
-              btn.className = "bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 px-4 rounded-2xl text-sm sm:text-base transition-all w-full text-left border-2 border-indigo-400 shadow-lg active:scale-95";
-              btn.innerText = opt;
-              btn.onclick = () => {
-                if (idx === quiz.answer) {
-                  showModal(
-                    "fa-circle-check text-emerald-400",
-                    "🎉 回答正確！",
-                    `${quiz.explanation}`,
-                    false,
-                    () => {
-                      quiz.reward(p);
-                      if (onComplete) onComplete();
-                      else finishTurn();
-                    }
-                  );
-                } else {
-                  showModal(
-                    "fa-circle-xmark text-rose-400",
-                    "❌ 答錯囉！",
-                    `沒關係！再接再勵！<br><br><span class="text-emerald-300 font-bold">${quiz.explanation}</span>`,
-                    false,
-                    onComplete || finishTurn
-                  );
-                }
-              };
-              actions.appendChild(btn);
-            });
-          }
+      if (actions) {
+        actions.innerHTML = "";
+        if (isMyTurnToAct) {
+          quiz.options.forEach((opt, idx) => {
+            const btn = document.createElement("button");
+            btn.className = "bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 px-4 rounded-2xl text-sm sm:text-base transition-all w-full text-left border-2 border-indigo-400 shadow-lg active:scale-95";
+            btn.innerText = opt;
+            btn.onclick = () => {
+              if (idx === quiz.answer) {
+                showModal(
+                  "fa-circle-check text-emerald-400",
+                  "🎉 回答正確！",
+                  `${quiz.explanation}`,
+                  false,
+                  () => {
+                    quiz.reward(p);
+                    if (onComplete) onComplete();
+                    else finishTurn();
+                  }
+                );
+              } else {
+                showModal(
+                  "fa-circle-xmark text-rose-400",
+                  "❌ 答錯囉！",
+                  `沒關係！再接再勵！<br><br><span class="text-emerald-300 font-bold">${quiz.explanation}</span>`,
+                  false,
+                  onComplete || finishTurn
+                );
+              }
+            };
+            actions.appendChild(btn);
+          });
         }
-      });
+      }
 
       document.getElementById("modal").classList.remove("hidden");
     }
@@ -1359,56 +1350,55 @@
 
       const isMyTurnToAct = (!isOnlineMode) || (myPlayerIndex === p.id);
 
-      ["p1", "p2"].forEach(target => {
-        const modalIcon = document.getElementById(`modal-icon-${target}`);
-        const modalTitle = document.getElementById(`modal-title-${target}`);
-        const modalDesc = document.getElementById(`modal-desc-${target}`);
-        const actions = document.getElementById(`modal-actions-${target}`);
+      const target = "main";
+      const modalIcon = document.getElementById(`modal-icon-${target}`);
+      const modalTitle = document.getElementById(`modal-title-${target}`);
+      const modalDesc = document.getElementById(`modal-desc-${target}`);
+      const actions = document.getElementById(`modal-actions-${target}`);
 
-        if (modalIcon) {
-          modalIcon.className = "text-4xl sm:text-5xl mb-3 text-amber-400";
-          modalIcon.innerHTML = `<i class="fa-solid fa-building-columns"></i>`;
+      if (modalIcon) {
+        modalIcon.className = "text-4xl sm:text-5xl mb-3 text-amber-400";
+        modalIcon.innerHTML = `<i class="fa-solid fa-building-columns"></i>`;
+      }
+      if (modalTitle) modalTitle.innerText = `購買 ${tile.name}`;
+      if (modalDesc) {
+        modalDesc.innerHTML = `
+          選擇購買方式：<br>
+          <b>全額現購</b>：全額支付 <b class="text-amber-400 text-xl font-black">$${actualPrice.toLocaleString()}</b>
+        `;
+      }
+
+      if (actions) {
+        actions.innerHTML = "";
+        if (isMyTurnToAct) {
+          const fullBtn = document.createElement("button");
+          fullBtn.className = "bg-amber-500 hover:bg-amber-400 text-slate-900 font-black py-3 px-6 rounded-2xl text-sm sm:text-base transition-all shadow-xl active:scale-95";
+          fullBtn.innerText = `全額現購 ($${actualPrice.toLocaleString()})`;
+          fullBtn.onclick = () => {
+            if (p.money >= actualPrice) {
+              p.money -= actualPrice;
+              if (p.activeBuffs.lever) p.activeBuffs.lever = false;
+              tile.owner = p.id;
+              addLog(`🏢 ${p.name} 花費 $${actualPrice.toLocaleString()} 購買了 ${tile.name}！`, "text-emerald-400 font-black");
+            } else {
+              addLog(`${p.name} 現金不足，無法購買 ${tile.name}。`, "text-rose-400 font-black");
+            }
+            document.getElementById("modal").classList.add("hidden");
+            finishTurn();
+          };
+
+          const cancelBtn = document.createElement("button");
+          cancelBtn.className = "bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-6 rounded-2xl text-sm sm:text-base transition-all shadow active:scale-95";
+          cancelBtn.innerText = "放棄";
+          cancelBtn.onclick = () => {
+            document.getElementById("modal").classList.add("hidden");
+            finishTurn();
+          };
+
+          actions.appendChild(fullBtn);
+          actions.appendChild(cancelBtn);
         }
-        if (modalTitle) modalTitle.innerText = `購買 ${tile.name}`;
-        if (modalDesc) {
-          modalDesc.innerHTML = `
-            選擇購買方式：<br>
-            <b>全額現購</b>：全額支付 <b class="text-amber-400 text-xl font-black">$${actualPrice.toLocaleString()}</b>
-          `;
-        }
-
-        if (actions) {
-          actions.innerHTML = "";
-          if (isMyTurnToAct) {
-            const fullBtn = document.createElement("button");
-            fullBtn.className = "bg-amber-500 hover:bg-amber-400 text-slate-900 font-black py-3 px-6 rounded-2xl text-sm sm:text-base transition-all shadow-xl active:scale-95";
-            fullBtn.innerText = `全額現購 ($${actualPrice.toLocaleString()})`;
-            fullBtn.onclick = () => {
-              if (p.money >= actualPrice) {
-                p.money -= actualPrice;
-                if (p.activeBuffs.lever) p.activeBuffs.lever = false;
-                tile.owner = p.id;
-                addLog(`🏢 ${p.name} 花費 $${actualPrice.toLocaleString()} 購買了 ${tile.name}！`, "text-emerald-400 font-black");
-              } else {
-                addLog(`${p.name} 現金不足，無法購買 ${tile.name}。`, "text-rose-400 font-black");
-              }
-              document.getElementById("modal").classList.add("hidden");
-              finishTurn();
-            };
-
-            const cancelBtn = document.createElement("button");
-            cancelBtn.className = "bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-6 rounded-2xl text-sm sm:text-base transition-all shadow active:scale-95";
-            cancelBtn.innerText = "放棄";
-            cancelBtn.onclick = () => {
-              document.getElementById("modal").classList.add("hidden");
-              finishTurn();
-            };
-
-            actions.appendChild(fullBtn);
-            actions.appendChild(cancelBtn);
-          }
-        }
-      });
+      }
 
       document.getElementById("modal").classList.remove("hidden");
     }
@@ -1416,62 +1406,60 @@
     function showModal(iconClass, title, desc, showConfirm, onConfirm = null, onCancel = null) {
       const modal = document.getElementById("modal");
       
-      ["p1", "p2"].forEach(target => {
-        const modalIcon = document.getElementById(`modal-icon-${target}`);
-        const modalTitle = document.getElementById(`modal-title-${target}`);
-        const modalDesc = document.getElementById(`modal-desc-${target}`);
-        const actions = document.getElementById(`modal-actions-${target}`);
+      const target = "main";
+      const modalIcon = document.getElementById(`modal-icon-${target}`);
+      const modalTitle = document.getElementById(`modal-title-${target}`);
+      const modalDesc = document.getElementById(`modal-desc-${target}`);
+      const actions = document.getElementById(`modal-actions-${target}`);
 
-        if (modalIcon) {
-          modalIcon.className = `text-4xl sm:text-5xl mb-3 ${iconClass.includes('text-') ? iconClass : iconClass + ' text-amber-400'}`;
-          modalIcon.innerHTML = `<i class="fa-solid ${iconClass.split(' ')[0]}"></i>`;
-        }
-        if (modalTitle) modalTitle.innerText = title;
-        if (modalDesc) modalDesc.innerHTML = desc;
+      if (modalIcon) {
+        modalIcon.className = `text-4xl sm:text-5xl mb-3 ${iconClass.includes('text-') ? iconClass : iconClass + ' text-amber-400'}`;
+        modalIcon.innerHTML = `<i class="fa-solid ${iconClass.split(' ')[0]}"></i>`;
+      }
+      if (modalTitle) modalTitle.innerText = title;
+      if (modalDesc) modalDesc.innerHTML = desc;
 
-        if (actions) {
-          actions.innerHTML = "";
-          const confirmBtn = document.createElement("button");
-          confirmBtn.className = "bg-amber-500 hover:bg-amber-400 text-slate-900 font-black py-3 px-8 rounded-2xl text-sm sm:text-base transition-all shadow-xl active:scale-95";
-          confirmBtn.innerText = "確認";
-          confirmBtn.onclick = () => {
+      if (actions) {
+        actions.innerHTML = "";
+        const confirmBtn = document.createElement("button");
+        confirmBtn.className = "bg-amber-500 hover:bg-amber-400 text-slate-900 font-black py-3 px-8 rounded-2xl text-sm sm:text-base transition-all shadow-xl active:scale-95";
+        confirmBtn.innerText = "確認";
+        confirmBtn.onclick = () => {
+          modal.classList.add("hidden");
+          if (onConfirm) onConfirm();
+        };
+        actions.appendChild(confirmBtn);
+
+        if (showConfirm) {
+          const cancelBtn = document.createElement("button");
+          cancelBtn.className = "bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-6 rounded-2xl text-sm sm:text-base transition-all shadow active:scale-95";
+          cancelBtn.innerText = "取消";
+          cancelBtn.onclick = () => {
             modal.classList.add("hidden");
-            if (onConfirm) onConfirm();
+            if (onCancel) onCancel();
           };
-          actions.appendChild(confirmBtn);
-
-          if (showConfirm) {
-            const cancelBtn = document.createElement("button");
-            cancelBtn.className = "bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-6 rounded-2xl text-sm sm:text-base transition-all shadow active:scale-95";
-            cancelBtn.innerText = "取消";
-            cancelBtn.onclick = () => {
-              modal.classList.add("hidden");
-              if (onCancel) onCancel();
-            };
-            actions.appendChild(cancelBtn);
-          }
+          actions.appendChild(cancelBtn);
         }
-      });
+      }
 
       modal.classList.remove("hidden");
     }
 
     function showModalCustomActions(iconClass, title, desc, customHTML) {
       const modal = document.getElementById("modal");
-      ["p1", "p2"].forEach(target => {
-        const modalIcon = document.getElementById(`modal-icon-${target}`);
-        const modalTitle = document.getElementById(`modal-title-${target}`);
-        const modalDesc = document.getElementById(`modal-desc-${target}`);
-        const actions = document.getElementById(`modal-actions-${target}`);
+      const target = "main";
+      const modalIcon = document.getElementById(`modal-icon-${target}`);
+      const modalTitle = document.getElementById(`modal-title-${target}`);
+      const modalDesc = document.getElementById(`modal-desc-${target}`);
+      const actions = document.getElementById(`modal-actions-${target}`);
 
-        if (modalIcon) {
-          modalIcon.className = `text-4xl sm:text-5xl mb-3 ${iconClass.includes('text-') ? iconClass : iconClass + ' text-amber-400'}`;
-          modalIcon.innerHTML = `<i class="fa-solid ${iconClass.split(' ')[0]}"></i>`;
-        }
-        if (modalTitle) modalTitle.innerText = title;
-        if (modalDesc) modalDesc.innerHTML = desc;
-        if (actions) actions.innerHTML = customHTML;
-      });
+      if (modalIcon) {
+        modalIcon.className = `text-4xl sm:text-5xl mb-3 ${iconClass.includes('text-') ? iconClass : iconClass + ' text-amber-400'}`;
+        modalIcon.innerHTML = `<i class="fa-solid ${iconClass.split(' ')[0]}"></i>`;
+      }
+      if (modalTitle) modalTitle.innerText = title;
+      if (modalDesc) modalDesc.innerHTML = desc;
+      if (actions) actions.innerHTML = customHTML;
       modal.classList.remove("hidden");
     }
 
