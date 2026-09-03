@@ -294,8 +294,75 @@
         <button onclick="closeAvatarModal()" class="text-slate-400 hover:text-white text-xl font-bold p-1"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
+      <div class="space-y-4">
+        <div class="flex flex-col items-center bg-slate-900 border border-slate-700 rounded-2xl p-4">
+          <div id="avatar-preview-box" class="w-20 h-20 rounded-full bg-red-500 flex items-center justify-center text-4xl border-4 border-white shadow-xl overflow-hidden mb-2">
+            <i class="fa-solid fa-user-ninja text-white"></i>
+          </div>
+          <div id="avatar-preview-name" class="font-black text-lg text-white">玩家 1 (紅)</div>
+        </div>
+
+        <label class="block">
+          <span class="text-sm font-black text-slate-300">玩家名稱</span>
+          <input id="avatar-input-name" oninput="updateAvatarPreview()" maxlength="16" class="mt-1 w-full bg-slate-900 border-2 border-slate-600 rounded-xl px-3 py-2 text-white font-bold focus:border-amber-400 focus:outline-none" placeholder="輸入玩家名稱">
+        </label>
+
+        <div class="flex gap-2 bg-slate-900 border border-slate-700 rounded-2xl p-1">
+          <button id="tab-btn-icon" onclick="switchAvatarTab('icon')" class="flex-1 py-2 px-3 rounded-xl font-bold text-sm bg-amber-500 text-slate-900 border-2 border-amber-400">圖示</button>
+          <button id="tab-btn-image" onclick="switchAvatarTab('image')" class="flex-1 py-2 px-3 rounded-xl font-bold text-sm bg-slate-700 text-slate-300 border-2 border-slate-600">圖片</button>
+        </div>
+
+        <div id="avatar-tab-icon" class="space-y-3">
+          <div>
+            <div class="text-sm font-black text-slate-300 mb-2">角色圖示</div>
+            <div class="grid grid-cols-5 gap-2">
+              <button onclick="selectAvatarIcon('fa-user-ninja')" class="bg-slate-700 hover:bg-slate-600 rounded-xl p-3 text-xl border border-slate-600"><i class="fa-solid fa-user-ninja"></i></button>
+              <button onclick="selectAvatarIcon('fa-user-astronaut')" class="bg-slate-700 hover:bg-slate-600 rounded-xl p-3 text-xl border border-slate-600"><i class="fa-solid fa-user-astronaut"></i></button>
+              <button onclick="selectAvatarIcon('fa-robot')" class="bg-slate-700 hover:bg-slate-600 rounded-xl p-3 text-xl border border-slate-600"><i class="fa-solid fa-robot"></i></button>
+              <button onclick="selectAvatarIcon('fa-flask')" class="bg-slate-700 hover:bg-slate-600 rounded-xl p-3 text-xl border border-slate-600"><i class="fa-solid fa-flask"></i></button>
+              <button onclick="selectAvatarIcon('fa-bolt')" class="bg-slate-700 hover:bg-slate-600 rounded-xl p-3 text-xl border border-slate-600"><i class="fa-solid fa-bolt"></i></button>
+            </div>
+          </div>
+
+          <div>
+            <div class="text-sm font-black text-slate-300 mb-2">代表顏色</div>
+            <div class="grid grid-cols-6 gap-2">
+              <button onclick="selectAvatarColor('bg-red-500')" class="h-10 rounded-xl bg-red-500 border-2 border-white/70" title="紅色"></button>
+              <button onclick="selectAvatarColor('bg-blue-500')" class="h-10 rounded-xl bg-blue-500 border-2 border-white/70" title="藍色"></button>
+              <button onclick="selectAvatarColor('bg-emerald-500')" class="h-10 rounded-xl bg-emerald-500 border-2 border-white/70" title="綠色"></button>
+              <button onclick="selectAvatarColor('bg-amber-500')" class="h-10 rounded-xl bg-amber-500 border-2 border-white/70" title="黃色"></button>
+              <button onclick="selectAvatarColor('bg-fuchsia-500')" class="h-10 rounded-xl bg-fuchsia-500 border-2 border-white/70" title="紫紅色"></button>
+              <button onclick="selectAvatarColor('bg-cyan-500')" class="h-10 rounded-xl bg-cyan-500 border-2 border-white/70" title="青色"></button>
+            </div>
+          </div>
+        </div>
+
+        <div id="avatar-tab-image" class="hidden space-y-3">
+          <label class="block">
+            <span class="text-sm font-black text-slate-300">上傳圖片</span>
+            <input id="avatar-file-input" type="file" accept="image/*" onchange="handleAvatarFileUpload(event)" class="mt-1 w-full text-sm text-slate-300 file:mr-3 file:rounded-xl file:border-0 file:bg-amber-500 file:px-3 file:py-2 file:font-black file:text-slate-900">
+          </label>
+          <label class="block">
+            <span class="text-sm font-black text-slate-300">或貼上圖片網址</span>
+            <input id="avatar-url-input" oninput="handleAvatarUrlInput(event)" class="mt-1 w-full bg-slate-900 border-2 border-slate-600 rounded-xl px-3 py-2 text-white font-bold focus:border-amber-400 focus:outline-none" placeholder="https://...">
+          </label>
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <button onclick="saveAvatarSettings()" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-900 font-black py-3 rounded-xl shadow-lg active:scale-95">
+            儲存設定
+          </button>
+          <button onclick="closeAvatarModal()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-5 rounded-xl active:scale-95">
+            取消
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 🌐 引入 PeerJS 免伺服器 P2P 直連套件 -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="assets/js/game-data.js"></script>
 
   <!-- 🎮 遊戲核心與 P2P 線上連線邏輯 -->
   <script>
@@ -1456,6 +1523,19 @@
     // 啟動應用程式
     window.onload = () => {
       initBoard();
+    };
+
+    // 方便在 GitHub Pages 或瀏覽器 Console 做冒煙測試。
+    window.__getGameState = function() {
+      return {
+        currentPlayerIndex,
+        isRolling,
+        isOnlineMode,
+        isConnected,
+        currentRoomId,
+        players: JSON.parse(JSON.stringify(players)),
+        boardTiles: JSON.parse(JSON.stringify(boardTiles))
+      };
     };
   </script>
 </body>
