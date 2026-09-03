@@ -596,24 +596,48 @@
     };
 
     window.openLobbyModal = async function() {
-      if (window.quizzesReady) await window.quizzesReady;
+      // Show the modal immediately with loading state
+      document.getElementById("lobby-modal").classList.remove("hidden");
       
       const weightsContainer = document.getElementById("lobby-quiz-weights");
-      if (weightsContainer && window.uniqueQuizTitles) {
+      
+      // Attempt to wait for quizzes with a 1.5s timeout
+      if (window.quizzesReady) {
+        try {
+          await Promise.race([
+            window.quizzesReady,
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500))
+          ]);
+        } catch (e) {
+          console.warn("題庫載入超時或失敗，將使用預設設定。", e);
+        }
+      }
+      
+      // Fallback titles if uniqueQuizTitles is missing
+      const titles = window.uniqueQuizTitles && window.uniqueQuizTitles.length > 0 
+                     ? window.uniqueQuizTitles 
+                     : ["槓桿原理挑戰", "滑輪省力挑戰", "輪軸傳動挑戰", "齒輪咬合挑戰", "斜面省力挑戰"];
+      
+      if (weightsContainer) {
         weightsContainer.innerHTML = "";
-        window.uniqueQuizTitles.forEach(title => {
+        titles.forEach(title => {
+          const defaultWeight = 100 / titles.length;
+          const currentWeight = (quizWeights && typeof quizWeights[title] !== 'undefined') ? quizWeights[title] : defaultWeight;
+          
+          if (quizWeights) {
+            quizWeights[title] = currentWeight;
+          }
+
           const row = document.createElement("div");
           row.className = "flex items-center justify-between gap-2";
           row.innerHTML = `
             <span class="text-sm font-bold text-slate-300 w-1/3 truncate" title="${title}">${title}</span>
-            <input type="range" min="0" max="100" value="${quizWeights[title] || 0}" class="flex-1 accent-amber-500" onchange="window.updateQuizWeight('${title}', this.value)">
-            <span class="text-sm font-black text-amber-400 w-8 text-right" id="weight-val-${title}">${Math.round(quizWeights[title] || 0)}%</span>
+            <input type="range" min="0" max="100" value="${currentWeight}" class="flex-1 accent-amber-500" onchange="window.updateQuizWeight('${title}', this.value)">
+            <span class="text-sm font-black text-amber-400 w-8 text-right" id="weight-val-${title}">${Math.round(currentWeight)}%</span>
           `;
           weightsContainer.appendChild(row);
         });
       }
-      
-      document.getElementById("lobby-modal").classList.remove("hidden");
     };
 
     window.updateQuizWeight = function(title, val) {
