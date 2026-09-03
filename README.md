@@ -1,6 +1,6 @@
 # 物理大富翁
 
-這是一個可部署到 GitHub Pages 的靜態網頁遊戲。主頁是 `index.html`，遊戲初始資料放在 `assets/js/game-data.js`。
+這是一個可部署到 GitHub Pages 的靜態網頁遊戲。主頁是 `index.html`，遊戲初始資料放在 `assets/js/game-data.js`，物理題庫放在 `assets/js/physics-quizzes.js`。
 
 ## 開啟方式
 
@@ -27,3 +27,5 @@ P2P 連線會受瀏覽器、校園/公司網路、防火牆與 NAT 影響；若�
 ## 開發備註
 
 瀏覽器 Console 可呼叫 `window.__getGameState()` 查看目前遊戲狀態，方便做冒煙測試與除錯。
+
+新增或修改物理題目時，編輯 `assets/js/physics-quizzes.js` 裡的 `physicsQuizzes` 陣列即可。

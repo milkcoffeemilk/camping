@@ -363,6 +363,7 @@
   <!-- 🌐 引入 PeerJS 免伺服器 P2P 直連套件 -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="assets/js/game-data.js"></script>
+  <script src="assets/js/physics-quizzes.js"></script>
 
   <!-- 🎮 遊戲核心與 P2P 線上連線邏輯 -->
   <script>
@@ -1175,6 +1176,17 @@
     };
 
     function triggerPhysicsQuiz(p, machineType) {
+      if (!physicsQuizzes || physicsQuizzes.length === 0) {
+        showModal(
+          "fa-triangle-exclamation text-amber-400",
+          "題庫尚未載入",
+          "物理題庫還在載入中，請稍後再試。此回合先跳過題目。",
+          false,
+          finishTurn
+        );
+        return;
+      }
+
       const quiz = physicsQuizzes.find(q => q.machine === machineType) || physicsQuizzes[0];
       const isMyTurn = (!isOnlineMode) || (myPlayerIndex === currentPlayerIndex);
 
@@ -1521,7 +1533,10 @@
     };
 
     // 啟動應用程式
-    window.onload = () => {
+    window.onload = async () => {
+      if (window.physicsQuizzesReady) {
+        await window.physicsQuizzesReady;
+      }
       initBoard();
     };
 

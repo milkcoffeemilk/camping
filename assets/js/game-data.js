@@ -79,69 +79,6 @@ let boardTiles = [
   { id: 26, name: "回轉捷徑", type: "chance", icon: "fa-route", pos: [3, 1] }
 ];
 
-const physicsQuizzes = [
-  {
-    machine: "lever",
-    title: "槓桿原理挑戰",
-    question: "想用比較小的力抬起重物，施力點通常應該放在哪裡？",
-    options: ["離支點遠一點", "離支點近一點", "直接放在支點上"],
-    answer: 0,
-    explanation: "答對了！施力臂越長，越容易產生足夠力矩。",
-    reward: (p) => {
-      p.inventory.lever++;
-      addLog(`🎁 ${p.name} 獲得【槓桿道具卡】！`, "text-amber-300 font-black");
-    }
-  },
-  {
-    machine: "pulley",
-    title: "滑輪省力挑戰",
-    question: "動滑輪最主要的效果是什麼？",
-    options: ["改變物體顏色", "省力但拉繩距離較長", "讓重力消失"],
-    answer: 1,
-    explanation: "答對了！動滑輪能分擔重量，所以比較省力。",
-    reward: (p) => {
-      p.inventory.pulley++;
-      addLog(`🎁 ${p.name} 獲得【滑輪道具卡】！`, "text-blue-300 font-black");
-    }
-  },
-  {
-    machine: "wheel",
-    title: "輪軸傳動挑戰",
-    question: "輪軸能讓工作變輕鬆，關鍵原因比較接近哪一個？",
-    options: ["利用較大的輪半徑增加力矩", "讓物體變輕", "讓時間停止"],
-    answer: 0,
-    explanation: "答對了！輪越大，同樣的力可以產生更大的轉動效果。",
-    reward: (p) => {
-      p.inventory.wheel++;
-      addLog(`🎁 ${p.name} 獲得【輪軸道具卡】！`, "text-emerald-300 font-black");
-    }
-  },
-  {
-    machine: "gear",
-    title: "齒輪咬合挑戰",
-    question: "兩個互相咬合的齒輪，轉動方向會如何？",
-    options: ["方向相同", "方向相反", "完全不會轉"],
-    answer: 1,
-    explanation: "答對了！相鄰齒輪會朝相反方向旋轉。",
-    reward: (p) => {
-      p.inventory.gear++;
-      addLog(`🎁 ${p.name} 獲得【齒輪道具卡】！`, "text-indigo-300 font-black");
-    }
-  },
-  {
-    machine: "incline",
-    title: "斜面省力挑戰",
-    question: "斜面為什麼能省力？",
-    options: ["把重物推上較長距離，降低需要的力", "讓重量直接歸零", "只靠運氣"],
-    answer: 0,
-    explanation: "答對了！斜面用較長路徑換取較小施力。",
-    reward: (p) => {
-      p.inventory.incline++;
-      addLog(`🎁 ${p.name} 獲得【斜面道具卡】！`, "text-cyan-300 font-black");
-    }
-  }
-];
-
 const chanceCards = [
   {
     title: "實驗成功",
