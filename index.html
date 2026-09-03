@@ -270,7 +270,7 @@
     <div class="w-full max-w-md my-auto flex flex-col gap-4 py-2">
       
       <!-- 單一視角卡片 -->
-      <div id="modal-card-main" class="bg-slate-800 border-4 border-amber-500/70 rounded-3xl p-4 sm:p-6 text-center shadow-[0_0_40px_rgba(245,158,11,0.3)] transition-transform scale-95 animate-[pulse_0.2s_ease-out_forwards] hover:scale-100">
+      <div id="modal-card-main" class="bg-slate-800 border-4 border-amber-500/70 rounded-3xl p-4 sm:p-6 text-center shadow-[0_0_40px_rgba(245,158,11,0.3)] transition-transform hover:scale-[1.02]">
         <div id="modal-icon-main" class="text-4xl sm:text-5xl mb-3 text-amber-400">
           <i class="fa-solid fa-circle-info"></i>
         </div>
@@ -1340,6 +1340,7 @@
       }
 
       document.getElementById("modal").classList.remove("hidden");
+      animateModalFromElement(`tile-${p.floor}-${quiz.id || p.position}`);
     }
 
     function showPropertyPurchaseModal(p, tile, actualPrice) {
@@ -1401,6 +1402,7 @@
       }
 
       document.getElementById("modal").classList.remove("hidden");
+      animateModalFromElement(`tile-${p.floor}-${tile.id}`);
     }
 
     function showModal(iconClass, title, desc, showConfirm, onConfirm = null, onCancel = null) {
@@ -1443,6 +1445,38 @@
       }
 
       modal.classList.remove("hidden");
+      animateModalFromElement();
+    }
+
+    function animateModalFromElement(elId) {
+      const modalCard = document.getElementById("modal-card-main");
+      if (!modalCard) return;
+      let startX = window.innerWidth / 2;
+      let startY = window.innerHeight / 2;
+      let startScale = 0.5;
+
+      if (elId) {
+        const el = document.getElementById(elId);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          startX = rect.left + rect.width / 2;
+          startY = rect.top + rect.height / 2;
+          startScale = 0.1;
+        }
+      }
+
+      const endX = window.innerWidth / 2;
+      const endY = window.innerHeight / 2;
+      const dx = startX - endX;
+      const dy = startY - endY;
+
+      modalCard.animate([
+        { transform: `translate(${dx}px, ${dy}px) scale(${startScale})`, opacity: 0 },
+        { transform: 'translate(0, 0) scale(1)', opacity: 1 }
+      ], {
+        duration: 400,
+        easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+      });
     }
 
     function showModalCustomActions(iconClass, title, desc, customHTML) {
@@ -1461,6 +1495,7 @@
       if (modalDesc) modalDesc.innerHTML = desc;
       if (actions) actions.innerHTML = customHTML;
       modal.classList.remove("hidden");
+      animateModalFromElement();
     }
 
     function addLog(msg, colorClass = "text-slate-300", fromRemote = false) {
