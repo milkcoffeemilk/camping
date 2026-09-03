@@ -151,11 +151,12 @@ function buildQuizzes(rows) {
     .map(rowToQuiz);
 }
 
+const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1YQi8FbgIaYKWxvb4MQWRSLVYctMKUj8rHY0BSudUwXw/export?format=csv";
+
 async function loadQuestions() {
   try {
-    const response = await fetch("assets/data/questions.csv", { cache: "no-store" });
+    const response = await fetch(GOOGLE_SHEET_URL, { cache: "no-store" });
     if (!response.ok) throw new Error(`CSV load failed: ${response.status}`);
-
     const csvText = await response.text();
     const loadedQuizzes = buildQuizzes(csvTextToObjects(csvText));
     questionsDB = loadedQuizzes.length > 0 ? loadedQuizzes : buildQuizzes(fallbackQuizRows);
@@ -204,12 +205,10 @@ function getQuizByWeight() {
   return questionsOfTitle[Math.floor(Math.random() * questionsOfTitle.length)];
 }
 
-async function loadFloorRules() {
+function loadFloorRules() {
   try {
-    const response = await fetch("assets/data/floor-rules.csv", { cache: "no-store" });
-    if (response.ok) {
-      const csvText = await response.text();
-      floorRules = csvTextToObjects(csvText).map(r => ({
+    if (typeof rawFloorRulesCSV !== 'undefined' && rawFloorRulesCSV) {
+      floorRules = csvTextToObjects(rawFloorRulesCSV).map(r => ({
         floor: parseInt(r.floor),
         math: parseInt(r.math) || 0,
         english: parseInt(r.english) || 0,
@@ -222,5 +221,6 @@ async function loadFloorRules() {
   }
 }
 
-window.quizzesReady = Promise.all([loadQuestions(), loadFloorRules()]);
+// Re-enable Promise.all to wait for fetch
+window.quizzesReady = Promise.all([loadQuestions(), Promise.resolve(loadFloorRules())]);
 window.getQuizByWeight = getQuizByWeight;

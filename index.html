@@ -343,6 +343,7 @@
 
   <!-- 🌐 引入 PeerJS 免伺服器 P2P 直連套件 -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="assets/data/floor-rules.js"></script>
   <script src="assets/js/game-data.js"></script>
   <script src="assets/js/quiz-system.js"></script>
 
@@ -596,27 +597,24 @@
     };
 
     window.openLobbyModal = async function() {
-      // Show the modal immediately with loading state
+      // Show the modal immediately
       document.getElementById("lobby-modal").classList.remove("hidden");
       
       const weightsContainer = document.getElementById("lobby-quiz-weights");
       
-      // Attempt to wait for quizzes with a 1.5s timeout
+      // Wait for quizzes Ready
       if (window.quizzesReady) {
         try {
-          await Promise.race([
-            window.quizzesReady,
-            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500))
-          ]);
+          await window.quizzesReady;
         } catch (e) {
-          console.warn("題庫載入超時或失敗，將使用預設設定。", e);
+          console.warn("題庫載入失敗，將使用預設設定。", e);
         }
       }
       
-      // Fallback titles if uniqueQuizTitles is missing
+      // Load titles from parsed DB
       const titles = window.uniqueQuizTitles && window.uniqueQuizTitles.length > 0 
                      ? window.uniqueQuizTitles 
-                     : ["槓桿原理挑戰", "滑輪省力挑戰", "輪軸傳動挑戰", "齒輪咬合挑戰", "斜面省力挑戰"];
+                     : ["槓桿原理", "滑輪", "輪軸", "齒輪", "斜面"];
       
       if (weightsContainer) {
         weightsContainer.innerHTML = "";
