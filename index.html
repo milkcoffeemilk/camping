@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>大富翁：物理簡單機械大冒險 (線上雙人版) v1.2.0</title>
+  <title>大富翁：物理簡單機械大冒險 (線上雙人版) v1.3.0</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -87,7 +87,7 @@
   <header class="max-w-7xl mx-auto w-full flex flex-wrap items-center justify-between bg-slate-800/80 backdrop-blur border border-slate-700 px-4 py-2.5 rounded-2xl mb-2 gap-2 shadow-lg relative">
     <div class="flex items-center gap-3">
       <span class="text-amber-400 font-black text-lg flex items-center gap-2">
-        <i class="fa-solid fa-atom text-xl animate-spin"></i> 立體學院大富翁 <span class="text-xs bg-amber-500 text-slate-900 px-2 py-0.5 rounded-full font-bold">v1.2.0</span>
+        <i class="fa-solid fa-atom text-xl animate-spin"></i> 立體學院大富翁 <span class="text-xs bg-amber-500 text-slate-900 px-2 py-0.5 rounded-full font-bold">v1.3.0</span>
       </span>
       <span id="room-badge" class="bg-slate-700 text-slate-300 px-3 py-1 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 border border-slate-600">
         <i class="fa-solid fa-plug text-yellow-400"></i> <span id="room-status-text">連線準備中...</span>
@@ -238,13 +238,6 @@
             </button>
           </div>
         </div>
-
-        <!-- 單機模式 -->
-        <div class="pt-2 text-center">
-          <button onclick="startSingleDeviceMode()" class="text-slate-400 hover:text-slate-200 text-sm font-bold underline flex items-center justify-center gap-1.5 mx-auto">
-            <i class="fa-solid fa-mobile-screen-button"></i> 同一台螢幕玩 (單機模式)
-          </button>
-        </div>
       </div>
 
     </div>
@@ -391,7 +384,7 @@
     let peerConn = null;
     let currentRoomId = null;
     let myPlayerIndex = 0; // 0: 玩家1(紅Host), 1: 玩家2(藍Guest)
-    let isOnlineMode = false;
+    let isOnlineMode = true;
     let isTopFlipped = false;
     let connectionTimeoutTimer = null;
     let isConnected = false;
@@ -582,24 +575,6 @@
       }
     };
 
-    window.startSingleDeviceMode = function() {
-      isOnlineMode = false;
-      isConnected = false;
-      myPlayerIndex = 0;
-      currentRoomId = null;
-      if (peer) {
-        peer.destroy();
-        peer = null;
-      }
-      peerConn = null;
-      
-      document.getElementById("lobby-modal").classList.add("hidden");
-      document.getElementById("waiting-modal").classList.add("hidden");
-      
-      addLog("🎮 已啟動【單機雙人同螢幕模式】", "text-amber-300 font-bold");
-      updateUI();
-    };
-
     window.openLobbyModal = function() {
       document.getElementById("lobby-modal").classList.remove("hidden");
     };
@@ -721,33 +696,20 @@
       centerArea.style.gridColumn = "2 / 6";
       centerArea.className = "bg-slate-950/95 rounded-2xl flex flex-col p-3 border-4 border-slate-700 shadow-2xl justify-between overflow-hidden relative z-0 h-full min-h-0 min-w-0 gap-2";
       centerArea.innerHTML = `
-        <div id="log-container-p2" class="border-b-2 border-slate-800 pb-1 flex-1 flex flex-col overflow-hidden min-h-0">
-          <div class="flex items-center justify-between text-xs sm:text-sm font-black text-blue-400 mb-1">
-            <span><i class="fa-solid fa-user-astronaut"></i> P2 (藍) 視角動態</span>
-            <span id="turn-indicator-p2" class="text-amber-300">輪到 玩家 1</span>
+        <div class="flex-1 flex flex-col overflow-hidden min-h-0 bg-slate-900/80 rounded-xl border border-slate-700 p-2">
+          <div class="flex items-center justify-between text-xs sm:text-sm font-black text-emerald-400 mb-1 border-b border-slate-700 pb-1">
+            <span><i class="fa-solid fa-satellite-dish"></i> 遊戲動態看板</span>
           </div>
-          <div class="relative flex-1 min-h-0">
-            <div id="game-log-p2" class="absolute inset-0 overflow-y-auto text-xs sm:text-sm font-bold space-y-1 text-left font-sans pr-1 leading-snug">
-              <div class="text-slate-400">🎮 蜿蜒街道對決！動態即時顯示。</div>
+          <div class="relative flex-1 min-h-0 mt-1">
+            <div id="game-log-main" class="absolute inset-0 overflow-y-auto text-xs sm:text-sm font-bold space-y-1 text-left font-sans pr-1 leading-snug">
+              <div class="text-slate-400">🎮 歡迎來到立體學院大富翁！</div>
             </div>
           </div>
         </div>
-
-        <div class="flex items-center justify-center gap-3 py-1 bg-slate-900 rounded-2xl border-2 border-slate-800 shrink-0">
-          <div id="dice" class="w-12 h-12 sm:w-14 sm:h-14 bg-amber-400 text-slate-900 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-black shadow-xl cursor-pointer hover:bg-amber-300 transition-all active:scale-95" onclick="rollDice()">
-            <i id="dice-icon" class="fa-solid fa-dice-one"></i>
-          </div>
-        </div>
-
-        <div id="log-container-p1" class="border-t-2 border-slate-800 pt-1 flex-1 flex flex-col overflow-hidden min-h-0">
-          <div class="flex items-center justify-between text-xs sm:text-sm font-black text-red-400 mb-1">
-            <span><i class="fa-solid fa-user-ninja"></i> P1 (紅) 視角動態</span>
-            <span id="turn-indicator-p1" class="text-amber-300">輪到 玩家 1</span>
-          </div>
-          <div class="relative flex-1 min-h-0">
-            <div id="game-log-p1" class="absolute inset-0 overflow-y-auto text-xs sm:text-sm font-bold space-y-1 text-left font-sans pr-1 leading-snug">
-              <div class="text-slate-400">🎮 蜿蜒街道對決！動態即時顯示。</div>
-            </div>
+        <div class="flex flex-col items-center justify-center gap-2 py-2 shrink-0">
+          <div id="turn-indicator-main" class="text-xs sm:text-sm font-black text-amber-300 bg-amber-900/40 px-3 py-1 rounded-full border border-amber-700"></div>
+          <div id="dice" class="w-16 h-16 sm:w-20 sm:h-20 bg-amber-400 text-slate-900 rounded-3xl flex items-center justify-center text-3xl sm:text-4xl font-black shadow-xl cursor-pointer hover:bg-amber-300 transition-all active:scale-95 border-b-4 border-amber-600" onclick="rollDice()">
+            <i id="dice-icon" class="fa-solid fa-dice-d20"></i>
           </div>
         </div>
       `;
@@ -901,7 +863,7 @@
         if (landsEl) landsEl.innerText = ownedLands.length > 0 ? ownedLands.join(", ") : "無";
 
         const isCurrentPlayersTurn = (idx === currentPlayerIndex);
-        const canControlThisPlayer = !isOnlineMode || (myPlayerIndex === idx);
+        const canControlThisPlayer = (myPlayerIndex === idx);
 
         const toolsContainer = document.getElementById(`p${idx}-physics-tools`);
         if (toolsContainer) {
@@ -949,7 +911,7 @@
         const leverageBtn = document.getElementById(`p${idx}-leverage-btn`);
         
         if (card && rollBtn) {
-          const isActive = isOnlineMode || isCurrentPlayersTurn;
+          const isActive = true;
           if (isActive) {
             card.classList.add("border-amber-400", "ring-4", "ring-amber-400/50");
             card.classList.remove("border-slate-700");
@@ -958,36 +920,17 @@
             card.classList.add("border-slate-700");
           }
           
-          const isMyTurnToAct = canControlThisPlayer && (isOnlineMode || isCurrentPlayersTurn) && !isRolling;
+          const isMyTurnToAct = canControlThisPlayer && !isRolling;
           rollBtn.disabled = !isMyTurnToAct;
           if (leverageBtn) leverageBtn.disabled = !isMyTurnToAct;
         }
       });
 
       const currentP = players[currentPlayerIndex];
-      const isMyTurn = (!isOnlineMode) || (myPlayerIndex === currentPlayerIndex);
-      let turnMsg = `<i class="fa-solid fa-circle-play"></i> 輪到 ${currentP.name} ${isMyTurn ? '<span class="text-emerald-400">(你的回合)</span>' : ''}`;
+      let turnMsg = `<i class="fa-solid fa-bolt text-amber-300"></i> 同步對戰 <span class="text-emerald-400">(可隨時擲骰)</span>`;
       
-      if (isOnlineMode) {
-        turnMsg = `<i class="fa-solid fa-bolt text-amber-300"></i> 同步模式 <span class="text-emerald-400">(可隨時擲骰)</span>`;
-      }
-      
-      const indP1 = document.getElementById("turn-indicator-p1");
-      const indP2 = document.getElementById("turn-indicator-p2");
-      if (indP1) indP1.innerHTML = turnMsg;
-      if (indP2) indP2.innerHTML = turnMsg;
-      
-      if (isOnlineMode) {
-        const containerP1 = document.getElementById("log-container-p1");
-        const containerP2 = document.getElementById("log-container-p2");
-        if (myPlayerIndex === 0) {
-          if (containerP2) containerP2.classList.add("hidden");
-          if (containerP1) { containerP1.classList.remove("border-t-2"); containerP1.classList.add("border-none"); }
-        } else {
-          if (containerP1) containerP1.classList.add("hidden");
-          if (containerP2) { containerP2.classList.remove("border-b-2"); containerP2.classList.add("border-none"); }
-        }
-      }
+      const indMain = document.getElementById("turn-indicator-main");
+      if (indMain) indMain.innerHTML = turnMsg;
     }
 
     window.rollDice = function() {
@@ -1533,15 +1476,14 @@
     }
 
     function addLog(msg, colorClass = "text-slate-300", fromRemote = false) {
-      ["game-log-p1", "game-log-p2"].forEach(logId => {
-        const logBox = document.getElementById(logId);
-        if (!logBox) return;
+      const logBox = document.getElementById("game-log-main");
+      if (logBox) {
         const entry = document.createElement("div");
         entry.className = `${colorClass} leading-tight mb-1`;
         entry.innerHTML = `> ${msg}`;
         logBox.appendChild(entry);
         logBox.scrollTop = logBox.scrollHeight;
-      });
+      }
 
       // 同步 Log 訊息給遠端
       if (isOnlineMode && peerConn && peerConn.open && !fromRemote) {
@@ -1707,6 +1649,7 @@
         await window.physicsQuizzesReady;
       }
       initBoard();
+      openLobbyModal();
     };
 
     // 方便在 GitHub Pages 或瀏覽器 Console 做冒煙測試。
