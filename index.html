@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>大富翁：物理簡單機械大冒險 (線上雙人版)</title>
+  <title>大富翁：物理簡單機械大冒險 (線上雙人版) v1.2.0</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -94,7 +94,7 @@
       </span>
     </div>
     
-    <span class="absolute -bottom-4 right-2 text-[10px] text-slate-500 font-mono">v1.1</span>
+    <span class="absolute -bottom-4 right-2 text-[10px] text-slate-500 font-mono">v1.2.0</span>
 
     <div class="flex items-center gap-2">
       <button onclick="toggleTopCardFlip()" id="flip-view-btn" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl border border-slate-600 transition-all active:scale-95 flex items-center gap-1.5">
@@ -1334,19 +1334,24 @@
     };
 
     function triggerPhysicsQuiz(p, onComplete) {
+      if (isOnlineMode && myPlayerIndex !== p.id) {
+        addLog(`⏳ ${p.name} 正在挑戰知識題...`, "text-amber-300 font-bold", true);
+        return;
+      }
+
       if (typeof questionsDB === 'undefined' || questionsDB.length === 0) {
         showModal(
           "fa-triangle-exclamation text-amber-400",
           "題庫尚未載入",
           "題庫還在載入中，請稍後再試。此回合先跳過題目。",
           false,
-          onComplete || finishTurn
+          onComplete || (() => finishTurn(p.id))
         );
         return;
       }
 
       const quiz = questionsDB[Math.floor(Math.random() * questionsDB.length)];
-      const isMyTurn = (!isOnlineMode) || (myPlayerIndex === currentPlayerIndex);
+      const isMyTurnToAct = (!isOnlineMode) || (myPlayerIndex === p.id);
 
       ["p1", "p2"].forEach(target => {
         const modalIcon = document.getElementById(`modal-icon-${target}`);
@@ -1364,13 +1369,12 @@
             <div class="text-left bg-slate-900 p-4 rounded-2xl border-2 border-slate-700 mb-3">
               <p class="font-black text-amber-300 text-sm sm:text-base leading-snug">${quiz.question}</p>
             </div>
-            ${!isMyTurn ? '<div class="text-sm font-bold text-slate-400 animate-pulse">（等待對手回答問題中...）</div>' : ''}
           `;
         }
 
         if (actions) {
           actions.innerHTML = "";
-          if (isMyTurn) {
+          if (isMyTurnToAct) {
             quiz.options.forEach((opt, idx) => {
               const btn = document.createElement("button");
               btn.className = "bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 px-4 rounded-2xl text-sm sm:text-base transition-all w-full text-left border-2 border-indigo-400 shadow-lg active:scale-95";
@@ -1408,7 +1412,12 @@
     }
 
     function showPropertyPurchaseModal(p, tile, actualPrice) {
-      const isMyTurn = (!isOnlineMode) || (myPlayerIndex === currentPlayerIndex);
+      if (isOnlineMode && myPlayerIndex !== p.id) {
+        addLog(`⏳ ${p.name} 正在考慮是否購買 ${tile.name}...`, "text-amber-300 font-bold", true);
+        return;
+      }
+
+      const isMyTurnToAct = (!isOnlineMode) || (myPlayerIndex === p.id);
 
       ["p1", "p2"].forEach(target => {
         const modalIcon = document.getElementById(`modal-icon-${target}`);
@@ -1425,13 +1434,12 @@
           modalDesc.innerHTML = `
             選擇購買方式：<br>
             <b>全額現購</b>：全額支付 <b class="text-amber-400 text-xl font-black">$${actualPrice.toLocaleString()}</b>
-            ${!isMyTurn ? '<div class="mt-2 text-sm text-slate-400 animate-pulse">（等待對手選擇是否購買...）</div>' : ''}
           `;
         }
 
         if (actions) {
           actions.innerHTML = "";
-          if (isMyTurn) {
+          if (isMyTurnToAct) {
             const fullBtn = document.createElement("button");
             fullBtn.className = "bg-amber-500 hover:bg-amber-400 text-slate-900 font-black py-3 px-6 rounded-2xl text-sm sm:text-base transition-all shadow-xl active:scale-95";
             fullBtn.innerText = `全額現購 ($${actualPrice.toLocaleString()})`;
@@ -1570,6 +1578,8 @@
       syncGameStateToPeer();
       updateUI();
     }
+
+
 
     window.openAvatarModal = function(playerIdx) {
       if (isOnlineMode && playerIdx !== myPlayerIndex) {
