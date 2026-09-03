@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大富翁：物理簡單機械大冒險 (線上雙人版)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap');
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      user-select: none;
+    }
+    
+    ::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.8);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #f59e0b;
+      border-radius: 6px;
+    }
+
+    @keyframes dice-roll {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.3); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+    .rolling {
+      animation: dice-roll 0.4s ease-in-out infinite;
+    }
+
+    /* 面對面 180 度旋轉樣式 */
+    .p2-flipped {
+      transform: rotate(180deg);
+    }
+
+    /* 蜿蜒街道地圖樣式 */
+    .street-scroll-container {
+      overflow: auto;
+      touch-action: pan-x pan-y;
+      -webkit-overflow-scrolling: touch;
+      max-height: 52vh;
+    }
+
+    /* 蛇形網格：5列 x 7欄 蜿蜒街道設計 */
+    .street-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(110px, 1fr));
+      grid-template-rows: repeat(5, minmax(105px, 1fr));
+      gap: 12px;
+      min-width: 820px;
+      padding: 16px;
+      background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+      border-radius: 1.5rem;
+    }
+
+    .road-tile {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .road-tile::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border: 2px dashed rgba(245, 158, 11, 0.25);
+      pointer-events: none;
+      border-radius: 0.75rem;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col justify-between p-2 md:p-4 selection:bg-amber-500 selection:text-slate-900">
+
+  <!-- 頂部線上連線資訊與功能列 -->
+  <header class="max-w-7xl mx-auto w-full flex flex-wrap items-center justify-between bg-slate-800/80 backdrop-blur border border-slate-700 px-4 py-2.5 rounded-2xl mb-2 gap-2 shadow-lg">
+    <div class="flex items-center gap-3">
+      <span class="text-amber-400 font-black text-lg flex items-center gap-2">
+        <i class="fa-solid fa-atom text-xl animate-spin"></i> 物理大富翁
+      </span>
+      <span id="room-badge" class="bg-slate-700 text-slate-300 px-3 py-1 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 border border-slate-600">
+        <i class="fa-solid fa-plug text-yellow-400"></i> <span id="room-status-text">連線準備中...</span>
+      </span>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button onclick="toggleTopCardFlip()" id="flip-view-btn" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl border border-slate-600 transition-all active:scale-95 flex items-center gap-1.5">
+        <i class="fa-solid fa-rotate"></i> 翻轉頂部視角
+      </button>
+      <button onclick="openLobbyModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-black px-3.5 py-1.5 rounded-xl shadow transition-all active:scale-95 flex items-center gap-1.5">
+        <i class="fa-solid fa-network-wired"></i> 大廳 / 切換房間
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto w-full flex-1 flex flex-col justify-between gap-3">
+    
+    <!-- 🔝 對手 / 玩家 2 控制區 -->
+    <div id="p1-card-container" class="transition-all duration-300">
+      <div id="p1-card" class="bg-slate-800 p-3 md:p-4 rounded-2xl border-4 border-slate-700 shadow-2xl flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center justify-between w-full md:w-auto gap-6">
+          <div class="flex items-center gap-4">
+            <div id="p1-avatar-box" onclick="openAvatarModal(1)" title="點擊自訂頭像" class="relative group cursor-pointer">
+              <div id="p1-avatar-img" class="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-2xl shadow-lg border-2 border-white overflow-hidden transition-transform group-hover:scale-105">
+                <i class="fa-solid fa-user-astronaut text-white"></i>
+              </div>
+              <span class="absolute -bottom-1 -right-1 bg-amber-400 text-slate-900 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold border border-slate-800 shadow"><i class="fa-solid fa-pen text-[10px]"></i></span>
+            </div>
+            <div>
+              <div class="font-black text-blue-400 text-xl md:text-2xl flex items-center gap-2">
+                <span id="p1-name-display">玩家 2 (藍)</span>
+                <span id="p1-identity-badge" class="hidden bg-blue-500/20 text-blue-300 border border-blue-500 text-xs px-2 py-0.5 rounded-md font-bold">這是你</span>
+              </div>
+              <div class="text-sm md:text-base text-slate-300 font-bold">地產：<span id="p1-lands" class="text-slate-100 font-black">無</span></div>
+            </div>
+          </div>
+          <span id="p1-money" class="text-2xl md:text-3xl font-black text-amber-300 tracking-wider">$15,000</span>
+        </div>
+
+        <!-- 機械道具區 & 動作按鈕 -->
+        <div class="flex items-center gap-3 w-full md:w-auto justify-end flex-wrap">
+          <div class="flex items-center gap-2 flex-wrap" id="p1-physics-tools">
+            <span class="bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-sm font-bold">背包空無一物</span>
+          </div>
+          <button id="p1-leverage-btn" onclick="openLeverageModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm md:text-base font-black py-2.5 px-4 rounded-xl transition-all shadow-lg flex items-center gap-1.5 active:scale-95 disabled:opacity-40">
+            <i class="fa-solid fa-chart-line"></i> 槓桿融資
+          </button>
+          <button id="p1-roll-btn" onclick="rollDice()" class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-black py-3 px-6 rounded-xl text-lg shadow-xl transition-all active:scale-95 disabled:opacity-40">
+            擲骰子 🎲
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🎲 中央街道與蜿蜒棋盤區域 -->
+    <div class="bg-slate-800/90 p-2 md:p-4 rounded-3xl shadow-2xl border-4 border-slate-700 relative my-auto">
+      <div class="text-center text-xs md:text-sm text-amber-400 font-black mb-1 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-arrows-up-down-left-right"></i> 蜿蜒城市街道地圖（自由滑動探索） <i class="fa-solid fa-arrows-up-down-left-right"></i>
+      </div>
+      
+      <div class="street-scroll-container">
+        <div id="board" class="street-grid relative">
+          <!-- 蜿蜒街道格與中央畫面由 JavaScript 動態生成 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 🔻 本機玩家 / 玩家 1 控制區 -->
+    <div id="p0-card-container" class="transition-all duration-300">
+      <div id="p0-card" class="bg-slate-800 p-3 md:p-4 rounded-2xl border-4 border-red-500 shadow-2xl flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center justify-between w-full md:w-auto gap-6">
+          <div class="flex items-center gap-4">
+            <div id="p0-avatar-box" onclick="openAvatarModal(0)" title="點擊自訂頭像" class="relative group cursor-pointer">
+              <div id="p0-avatar-img" class="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center text-2xl shadow-lg border-2 border-white overflow-hidden transition-transform group-hover:scale-105">
+                <i class="fa-solid fa-user-ninja text-white"></i>
+              </div>
+              <span class="absolute -bottom-1 -right-1 bg-amber-400 text-slate-900 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold border border-slate-800 shadow"><i class="fa-solid fa-pen text-[10px]"></i></span>
+            </div>
+            <div>
+              <div class="font-black text-red-400 text-xl md:text-2xl flex items-center gap-2">
+                <span id="p0-name-display">玩家 1 (紅)</span>
+                <span id="p0-identity-badge" class="hidden bg-red-500/20 text-red-300 border border-red-500 text-xs px-2 py-0.5 rounded-md font-bold">這是你</span>
+              </div>
+              <div class="text-sm md:text-base text-slate-300 font-bold">地產：<span id="p0-lands" class="text-slate-100 font-black">無</span></div>
+            </div>
+          </div>
+          <span id="p0-money" class="text-2xl md:text-3xl font-black text-amber-300 tracking-wider">$15,000</span>
+        </div>
+
+        <!-- 機械道具區 & 動作按鈕 -->
+        <div class="flex items-center gap-3 w-full md:w-auto justify-end flex-wrap">
+          <div class="flex items-center gap-2 flex-wrap" id="p0-physics-tools">
+            <span class="bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-sm font-bold">背包空無一物</span>
+          </div>
+          <button id="p0-leverage-btn" onclick="openLeverageModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm md:text-base font-black py-2.5 px-4 rounded-xl transition-all shadow-lg flex items-center gap-1.5 active:scale-95 disabled:opacity-40">
+            <i class="fa-solid fa-chart-line"></i> 槓桿融資
+          </button>
+          <button id="p0-roll-btn" onclick="rollDice()" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-900 font-black py-3 px-6 rounded-xl text-lg shadow-xl transition-all active:scale-95 disabled:opacity-40">
+            擲骰子 🎲
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 🌐 線上對戰房間大廳 Modal -->
+  <div id="lobby-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
+    <div class="bg-slate-800 border-4 border-amber-500/80 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl text-white relative">
+      
+      <div class="text-center mb-6">
+        <div class="text-5xl text-amber-400 mb-2"><i class="fa-solid fa-wifi"></i></div>
+        <h2 class="text-2xl sm:text-3xl font-black text-white">線上雙人對戰大廳</h2>
+        <p class="text-slate-300 text-sm mt-1">創建房間傳給朋友，或輸入房間號碼跨裝置對戰！</p>
+      </div>
+
+      <div class="space-y-4">
+        <!-- 創建房間區 -->
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-700 text-center">
+          <h3 class="font-black text-amber-300 text-lg mb-2"><i class="fa-solid fa-plus-circle"></i> 創建新對戰房間</h3>
+          <p class="text-xs text-slate-400 mb-3">你將成為 Host (玩家 1 紅)，生成獨一無二的專屬房號</p>
+          <button onclick="createOnlineRoom()" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-900 font-black py-3 rounded-xl text-base shadow-lg transition-all active:scale-95">
+            建立對戰房間 🚀
+          </button>
+        </div>
+
+        <!-- 加入房間區 -->
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-700">
+          <h3 class="font-black text-blue-400 text-lg mb-2 text-center"><i class="fa-solid fa-right-to-bracket"></i> 加入既有房間</h3>
+          <div class="flex gap-2">
+            <input type="text" id="join-room-input" placeholder="輸入 6 位數房間號碼" class="flex-1 bg-slate-800 border-2 border-slate-600 rounded-xl px-3 py-2 text-white font-black text-center text-lg focus:border-blue-400 focus:outline-none uppercase">
+            <button onclick="joinOnlineRoom()" class="bg-blue-600 hover:bg-blue-500 text-white font-black px-5 py-2 rounded-xl text-base shadow-lg transition-all active:scale-95">
+              加入 🎮
+            </button>
+          </div>
+        </div>
+
+        <!-- 單機模式 -->
+        <div class="pt-2 text-center">
+          <button onclick="startSingleDeviceMode()" class="text-slate-400 hover:text-slate-200 text-sm font-bold underline flex items-center justify-center gap-1.5 mx-auto">
+            <i class="fa-solid fa-mobile-screen-button"></i> 同一台螢幕玩 (單機模式)
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 房間等待對手 Modal -->
+  <div id="waiting-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 border-4 border-amber-500 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl text-center text-white">
+      <div class="text-5xl text-amber-400 mb-3 animate-bounce"><i class="fa-solid fa-hourglass-half"></i></div>
+      <h3 class="text-2xl font-black mb-2">等待對手加入...</h3>
+      <p class="text-slate-300 text-sm mb-4">請將下方房間號碼分享給對手：</p>
+
+      <div class="bg-slate-900 border-2 border-amber-400/60 p-4 rounded-2xl mb-4 flex items-center justify-between">
+        <span id="waiting-room-code" class="text-3xl font-black text-amber-300 tracking-widest font-mono">------</span>
+        <button onclick="copyRoomCode()" class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1 active:scale-95">
+          <i class="fa-solid fa-copy"></i> 複製房號
+        </button>
+      </div>
+
+      <div id="copy-toast" class="hidden text-xs text-emerald-400 font-bold mb-3">已複製房號至剪貼簿！</div>
+
+      <button onclick="leaveRoomAndReset()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-2 px-5 rounded-xl text-sm transition-all">
+        取消並離開房間
+      </button>
+    </div>
+  </div>
+
+  <!-- 彈窗 Modal: 對決動態訊息卡 -->
+  <div id="modal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden flex flex-col justify-between items-center p-3 sm:p-6 z-50 overflow-y-auto">
+    <div class="w-full max-w-2xl my-auto flex flex-col gap-4 py-2">
+      
+      <!-- 🔝 玩家 2 / 對向 視角卡片 -->
+      <div id="modal-card-p2" class="bg-slate-800 border-4 border-amber-500/70 rounded-3xl p-4 sm:p-6 text-center shadow-2xl transition-transform">
+        <div id="modal-icon-p2" class="text-4xl sm:text-5xl mb-3 text-amber-400">
+          <i class="fa-solid fa-circle-info"></i>
+        </div>
+        <h3 id="modal-title-p2" class="text-xl sm:text-3xl font-black mb-2 text-white">訊息標題</h3>
+        <div id="modal-desc-p2" class="text-slate-100 text-sm sm:text-base font-bold mb-4 leading-relaxed">訊息內容...</div>
+        <div id="modal-actions-p2" class="flex flex-wrap gap-3 justify-center"></div>
+      </div>
+
+      <!-- ⚡ 中央標示 -->
+      <div class="flex items-center justify-center gap-2 text-amber-400 text-xs sm:text-sm font-black tracking-widest uppercase my-1">
+        <i class="fa-solid fa-rotate text-cyan-400 text-base"></i> 即時同步對決訊息 <i class="fa-solid fa-rotate text-cyan-400 text-base"></i>
+      </div>
+
+      <!-- 🔻 玩家 1 視角卡片 -->
+      <div id="modal-card-p1" class="bg-slate-800 border-4 border-amber-500/70 rounded-3xl p-4 sm:p-6 text-center shadow-2xl transition-transform">
+        <div id="modal-icon-p1" class="text-4xl sm:text-5xl mb-3 text-amber-400">
+          <i class="fa-solid fa-circle-info"></i>
+        </div>
+        <h3 id="modal-title-p1" class="text-xl sm:text-3xl font-black mb-2 text-white">訊息標題</h3>
+        <div id="modal-desc-p1" class="text-slate-100 text-sm sm:text-base font-bold mb-4 leading-relaxed">訊息內容...</div>
+        <div id="modal-actions-p1" class="flex flex-wrap gap-3 justify-center"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 🎨 頭像與角色編輯 Modal -->
+  <div id="avatar-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50 overflow-y-auto">
+    <div class="bg-slate-800 border-4 border-amber-500/80 rounded-3xl p-5 sm:p-7 max-w-lg w-full shadow-2xl text-white relative">
+      <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+        <h3 class="text-xl sm:text-2xl font-black text-amber-400 flex items-center gap-2">
+          <i class="fa-solid fa-user-gear"></i> 自訂玩家頭像與設定
+        </h3>
+        <button onclick="closeAvatarModal()" class="text-slate-400 hover:text-white text-xl font-bold p-1"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+  <!-- 🌐 引入 PeerJS 免伺服器 P2P 直連套件 -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+  <!-- 🎮 遊戲核心與 P2P 線上連線邏輯 -->
+  <script>
+    let peer = null;
+    let peerConn = null;
+    let currentRoomId = null;
+    let myPlayerIndex = 0; // 0: 玩家1(紅Host), 1: 玩家2(藍Guest)
+    let isOnlineMode = false;
+    let isTopFlipped = false;
+    let connectionTimeoutTimer = null;
+    let isConnected = false;
+
+    // Google 公用 STUN 伺服器設定，大幅提高 P2P NAT 穿透與行動網路連線成功率
+    const peerConfig = {
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+          { urls: 'stun:stun3.l.google.com:19302' }
+        ]
+      }
+    };
+
+    // 建立免費 P2P 直連房間
+    window.createOnlineRoom = function() {
+      const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
+      currentRoomId = randomCode;
+      myPlayerIndex = 0; // Host 玩家 1
+      isOnlineMode = true;
+      isConnected = false;
+
+      const peerId = 'phy-mono-' + currentRoomId;
+
+      if (peer) peer.destroy();
+      peer = new Peer(peerId, peerConfig);
+
+      updateUI();
+
+      peer.on('open', (id) => {
+        addLog(`🌐 房間建立成功！專屬房號：${currentRoomId}`, "text-emerald-400 font-bold");
+        document.getElementById("lobby-modal").classList.add("hidden");
+        document.getElementById("waiting-room-code").innerText = currentRoomId;
+        document.getElementById("waiting-modal").classList.remove("hidden");
+        updateUI();
+      });
+
+      peer.on('connection', (conn) => {
+        peerConn = conn;
+        
+        // 確保雙向 WebRTC 資料管道完全開啟後再同步數據
+        conn.on('open', () => {
+          isConnected = true;
+          setupConnectionListeners();
+          document.getElementById("waiting-modal").classList.add("hidden");
+          addLog("🎉 對手成功連入房間！遊戲開始！", "text-emerald-300 font-black");
+          updateUI();
+          syncGameStateToPeer();
+        });
+      });
+
+      peer.on('error', (err) => {
+        console.error("PeerJS Host Error:", err);
+        showModal("fa-triangle-exclamation text-rose-400", "建立連線失敗", "可能該房號已被佔用或網路不穩定，請重新嘗試！", false);
+        updateUI();
+      });
+    };
+
+    // 加入既有 P2P 房間
+    window.joinOnlineRoom = function(evt) {
+      const inputEl = document.getElementById("join-room-input");
+      const codeInput = inputEl ? inputEl.value.trim() : "";
+      if (!codeInput || codeInput.length !== 6) {
+        showModal("fa-triangle-exclamation text-amber-400", "請輸入 6 位數房號", "請檢查房號格式是否正確！", false);
+        return;
+      }
+
+      const joinBtn = (evt && evt.currentTarget) ? evt.currentTarget : document.querySelector("button[onclick*='joinOnlineRoom']");
+      if (joinBtn) {
+        joinBtn.disabled = true;
+        joinBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> 連線中...';
+      }
+
+      currentRoomId = codeInput;
+      myPlayerIndex = 1; // Guest 玩家 2
+      isOnlineMode = true;
+      isConnected = false;
+
+      if (connectionTimeoutTimer) clearTimeout(connectionTimeoutTimer);
+
+      if (peer) peer.destroy();
+      peer = new Peer(peerConfig);
+
+      updateUI();
+
+      // 設定 12 秒連線逾時防護機制
+      connectionTimeoutTimer = setTimeout(() => {
+        if (!isConnected) {
+          if (peerConn) peerConn.close();
+          if (joinBtn) {
+            joinBtn.disabled = false;
+            joinBtn.innerHTML = '加入 🎮';
+          }
+          showModal("fa-circle-xmark text-rose-400", "連線逾時", `無法連線至房號 ${currentRoomId}。<br>請確認房號是否正確，且房主仍在房間中等待！`, false);
+          updateUI();
+        }
+      }, 12000);
+
+      peer.on('open', () => {
+        const targetPeerId = 'phy-mono-' + currentRoomId;
+        peerConn = peer.connect(targetPeerId, { reliable: true });
+
+        peerConn.on('open', () => {
+          if (connectionTimeoutTimer) clearTimeout(connectionTimeoutTimer);
+          isConnected = true;
+          if (joinBtn) {
+            joinBtn.disabled = false;
+            joinBtn.innerHTML = '加入 🎮';
+          }
+          setupConnectionListeners();
+          document.getElementById("lobby-modal").classList.add("hidden");
+          document.getElementById("waiting-modal").classList.add("hidden");
+          addLog(`🎮 已成功連線至房號 ${currentRoomId}！`, "text-emerald-400 font-bold");
+          updateUI();
+          renderPlayers();
+        });
+
+        peerConn.on('error', (err) => {
+          if (connectionTimeoutTimer) clearTimeout(connectionTimeoutTimer);
+          if (joinBtn) {
+            joinBtn.disabled = false;
+            joinBtn.innerHTML = '加入 🎮';
+          }
+          showModal("fa-circle-xmark text-rose-400", "找不到房間", "連線失敗！請確認房號是否正確或房間是否開啟。", false);
+          updateUI();
+        });
+      });
+
+      peer.on('error', (err) => {
+        console.error("PeerJS Guest Error:", err);
+        if (connectionTimeoutTimer) clearTimeout(connectionTimeoutTimer);
+        if (joinBtn) {
+          joinBtn.disabled = false;
+          joinBtn.innerHTML = '加入 🎮';
+        }
+        showModal("fa-circle-xmark text-rose-400", "連線失敗", "無法建立 P2P 直連，請檢查網路連線或重試。", false);
+        updateUI();
+      });
+    };
+
+    // 設定 P2P 訊息監聽與雙向資料同步
+    function setupConnectionListeners() {
+      if (!peerConn) return;
+
+      peerConn.on('data', (data) => {
+        if (data.type === 'SYNC_STATE') {
+          players = data.players;
+          boardTiles = data.boardTiles;
+          currentPlayerIndex = data.currentPlayerIndex;
+          isConnected = true;
+          updateUI();
+          renderPlayers();
+        } else if (data.type === 'LOG') {
+          addLog(data.msg, data.colorClass);
+        }
+      });
+
+      peerConn.on('close', () => {
+        isConnected = false;
+        showModal("fa-plug-circle-xmark text-rose-400", "對手已離線", "對手已斷開連線。", false);
+        updateUI();
+      });
+    }
+
+    // 將最新遊戲狀態同步給對方
+    function syncGameStateToPeer() {
+      if (isOnlineMode && peerConn && peerConn.open) {
+        peerConn.send({
+          type: 'SYNC_STATE',
+          players: players,
+          boardTiles: boardTiles,
+          currentPlayerIndex: currentPlayerIndex
+        });
+      }
+    }
+
+    window.copyRoomCode = function() {
+      if (!currentRoomId) return;
+      navigator.clipboard ? navigator.clipboard.writeText(currentRoomId) : document.execCommand('copy');
+      const toast = document.getElementById("copy-toast");
+      if (toast) {
+        toast.classList.remove("hidden");
+        setTimeout(() => toast.classList.add("hidden"), 2000);
+      }
+    };
+
+    window.startSingleDeviceMode = function() {
+      isOnlineMode = false;
+      isConnected = false;
+      myPlayerIndex = 0;
+      currentRoomId = null;
+      if (peer) {
+        peer.destroy();
+        peer = null;
+      }
+      peerConn = null;
+      
+      document.getElementById("lobby-modal").classList.add("hidden");
+      document.getElementById("waiting-modal").classList.add("hidden");
+      
+      addLog("🎮 已啟動【單機雙人同螢幕模式】", "text-amber-300 font-bold");
+      updateUI();
+    };
+
+    window.openLobbyModal = function() {
+      document.getElementById("lobby-modal").classList.remove("hidden");
+    };
+
+    window.leaveRoomAndReset = function() {
+      if (peer) {
+        peer.destroy();
+        peer = null;
+      }
+      peerConn = null;
+      currentRoomId = null;
+      isOnlineMode = false;
+      isConnected = false;
+      document.getElementById("waiting-modal").classList.add("hidden");
+      document.getElementById("lobby-modal").classList.remove("hidden");
+      updateUI();
+    };
+
+    window.toggleTopCardFlip = function() {
+      isTopFlipped = !isTopFlipped;
+      const card = document.getElementById("p1-card-container");
+      if (card) {
+        if (isTopFlipped) card.classList.add("p2-flipped");
+        else card.classList.remove("p2-flipped");
+      }
+    };
+
+    function getAvatarInnerHTML(p) {
+      if (p.avatarType === 'image' && p.customAvatar) {
+        return `<img src="${p.customAvatar}" class="w-full h-full object-cover rounded-full pointer-events-none" alt="avatar" onerror="this.onerror=null; this.src='https://placehold.co/100x100/1e293b/f59e0b?text=User';">`;
+      } else if (p.icon && p.icon.startsWith('fa-')) {
+        return `<i class="fa-solid ${p.icon} text-white"></i>`;
+      } else {
+        return `<span class="text-white font-bold">${p.icon || '👤'}</span>`;
+      }
+    }
+
+    function initBoard() {
+      const board = document.getElementById("board");
+      if (!board) return;
+      board.innerHTML = "";
+
+      boardTiles.forEach(tileData => {
+        const tileEl = document.createElement("div");
+        tileEl.id = `tile-${tileData.id}`;
+        tileEl.style.gridRowStart = tileData.pos[0] + 1;
+        tileEl.style.gridColumnStart = tileData.pos[1] + 1;
+        
+        let initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-2 border-slate-600 bg-slate-800/90 shadow-md transition-all min-h-0 min-w-0";
+        if (tileData.type === "start") initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-emerald-400 bg-emerald-950/90 shadow-lg shadow-emerald-950/50 transition-all min-h-0 min-w-0 text-emerald-300";
+        if (tileData.type === "physics") initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-amber-400 bg-amber-950/90 shadow-lg shadow-amber-950/50 transition-all min-h-0 min-w-0 text-amber-300";
+        if (tileData.type === "chance" || tileData.type === "fate") initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-indigo-400 bg-indigo-950/90 shadow-lg shadow-indigo-950/50 transition-all min-h-0 min-w-0 text-indigo-300";
+        if (tileData.type === "tax") initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-rose-400 bg-rose-950/90 shadow-lg shadow-rose-950/50 transition-all min-h-0 min-w-0 text-rose-300";
+
+        tileEl.className = initialBaseStyle;
+        
+        let tileContent = `
+          <div class="flex items-start justify-between gap-1 w-full">
+            <span class="truncate text-sm sm:text-base font-black text-white leading-tight">${tileData.name}</span>
+            <span id="tile-badge-${tileData.id}" class="shrink-0"></span>
+          </div>
+        `;
+        
+        if (tileData.type === "property") {
+          tileContent += `
+            <div class="flex items-center justify-between my-auto w-full pt-1">
+              <span class="text-sm sm:text-base font-black text-amber-300" id="tile-price-${tileData.id}">$${tileData.price}</span>
+              <span class="flex gap-0.5 text-sm text-amber-400" id="tile-houses-${tileData.id}"></span>
+            </div>
+          `;
+        } else if (tileData.icon) {
+          tileContent += `<div class="text-2xl sm:text-3xl my-auto text-center opacity-90"><i class="fa-solid ${tileData.icon}"></i></div>`;
+        }
+
+        tileContent += `<div id="piece-container-${tileData.id}" class="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1 z-10"></div>`;
+
+        tileEl.innerHTML = tileContent;
+        board.appendChild(tileEl);
+      });
+
+      const centerArea = document.createElement("div");
+      centerArea.style.gridRow = "2 / 4";
+      centerArea.style.gridColumn = "2 / 6";
+      centerArea.className = "bg-slate-950/95 rounded-2xl flex flex-col p-3 border-4 border-slate-700 shadow-2xl justify-between overflow-hidden relative z-0 h-full gap-2";
+      centerArea.innerHTML = `
+        <div class="border-b-2 border-slate-800 pb-1 flex-1 flex flex-col overflow-hidden min-h-0">
+          <div class="flex items-center justify-between text-xs sm:text-sm font-black text-blue-400 mb-1">
+            <span><i class="fa-solid fa-user-astronaut"></i> P2 (藍) 視角動態</span>
+            <span id="turn-indicator-p2" class="text-amber-300">輪到 玩家 1</span>
+          </div>
+          <div id="game-log-p2" class="flex-1 overflow-y-auto text-xs sm:text-sm font-bold space-y-1 text-left font-sans pr-1 leading-snug">
+            <div class="text-slate-400">🎮 蜿蜒街道對決！動態即時顯示。</div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-center gap-3 py-1 bg-slate-900 rounded-2xl border-2 border-slate-800 shrink-0">
+          <div id="dice" class="w-12 h-12 sm:w-14 sm:h-14 bg-amber-400 text-slate-900 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-black shadow-xl cursor-pointer hover:bg-amber-300 transition-all active:scale-95" onclick="rollDice()">
+            <i id="dice-icon" class="fa-solid fa-dice-one"></i>
+          </div>
+        </div>
+
+        <div class="border-t-2 border-slate-800 pt-1 flex-1 flex flex-col overflow-hidden min-h-0">
+          <div class="flex items-center justify-between text-xs sm:text-sm font-black text-red-400 mb-1">
+            <span><i class="fa-solid fa-user-ninja"></i> P1 (紅) 視角動態</span>
+            <span id="turn-indicator-p1" class="text-amber-300">輪到 玩家 1</span>
+          </div>
+          <div id="game-log-p1" class="flex-1 overflow-y-auto text-xs sm:text-sm font-bold space-y-1 text-left font-sans pr-1 leading-snug">
+            <div class="text-slate-400">🎮 蜿蜒街道對決！動態即時顯示。</div>
+          </div>
+        </div>
+      `;
+      board.appendChild(centerArea);
+
+      renderPlayers();
+      updateUI();
+    }
+
+    function renderPlayers() {
+      boardTiles.forEach(t => {
+        const container = document.getElementById(`piece-container-${t.id}`);
+        if (container) container.innerHTML = "";
+      });
+
+      players.forEach(p => {
+        if (p.bankrupted) return;
+        const container = document.getElementById(`piece-container-${p.position}`);
+        if (container) {
+          const piece = document.createElement("div");
+          piece.className = `w-7 h-7 sm:w-9 sm:h-9 ${p.color} rounded-full border-2 border-white flex items-center justify-center text-xs sm:text-base shadow-2xl animate-bounce overflow-hidden`;
+          piece.innerHTML = getAvatarInnerHTML(p);
+          container.appendChild(piece);
+        }
+      });
+    }
+
+    function updateUI() {
+      // 1. 更新頂部連線標籤
+      const statusText = document.getElementById("room-status-text");
+      if (statusText) {
+        if (isOnlineMode) {
+          if (isConnected) {
+            statusText.innerText = `🟢 線上對戰 (房號: ${currentRoomId}) - 你是 ${players[myPlayerIndex].name}`;
+          } else if (myPlayerIndex === 0) {
+            statusText.innerText = `⏳ 等待對手加入 (房號: ${currentRoomId})...`;
+          } else {
+            statusText.innerText = `⏳ 正在連線至房號 ${currentRoomId}...`;
+          }
+        } else {
+          statusText.innerText = "單機模式 (同螢幕對決)";
+        }
+      }
+
+      // 2. 顯示身分 Badge
+      document.getElementById("p0-identity-badge").classList.toggle("hidden", !(isOnlineMode && myPlayerIndex === 0));
+      document.getElementById("p1-identity-badge").classList.toggle("hidden", !(isOnlineMode && myPlayerIndex === 1));
+
+      // 3. 更新棋盤格
+      boardTiles.forEach(tile => {
+        const tileEl = document.getElementById(`tile-${tile.id}`);
+        if (!tileEl) return;
+
+        if (tile.type === "property") {
+          const badgeEl = document.getElementById(`tile-badge-${tile.id}`);
+          const houseEl = document.getElementById(`tile-houses-${tile.id}`);
+
+          if (tile.owner === 0) {
+            tileEl.className = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-red-500 bg-red-950/90 shadow-md transition-all min-h-0 min-w-0";
+            if (badgeEl) {
+              badgeEl.className = "bg-red-600 text-white font-black px-2 py-0.5 rounded-lg text-xs uppercase shadow-md";
+              badgeEl.innerText = players[0].name;
+            }
+          } else if (tile.owner === 1) {
+            tileEl.className = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-blue-500 bg-blue-950/90 shadow-md transition-all min-h-0 min-w-0";
+            if (badgeEl) {
+              badgeEl.className = "bg-blue-600 text-white font-black px-2 py-0.5 rounded-lg text-xs uppercase shadow-md";
+              badgeEl.innerText = players[1].name;
+            }
+          } else {
+            tileEl.className = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-2 border-slate-600 bg-slate-800/90 transition-all min-h-0 min-w-0";
+            if (badgeEl) {
+              badgeEl.className = "bg-slate-700 text-slate-300 font-bold px-2 py-0.5 rounded-lg text-xs";
+              badgeEl.innerText = "待售";
+            }
+          }
+
+          if (houseEl) {
+            houseEl.innerHTML = tile.houses > 0 ? '<i class="fa-solid fa-house text-amber-300 text-sm"></i>'.repeat(tile.houses) : "";
+          }
+        }
+      });
+
+      // 4. 更新玩家卡片與動作按鈕權限
+      players.forEach((p, idx) => {
+        const avatarImgBox = document.getElementById(`p${idx}-avatar-img`);
+        if (avatarImgBox) {
+          avatarImgBox.className = `w-12 h-12 rounded-full ${p.color} flex items-center justify-center text-2xl shadow-lg border-2 border-white overflow-hidden transition-transform`;
+          avatarImgBox.innerHTML = getAvatarInnerHTML(p);
+        }
+
+        const nameEl = document.getElementById(`p${idx}-name-display`);
+        if (nameEl) nameEl.innerText = p.name;
+
+        const moneyEl = document.getElementById(`p${idx}-money`);
+        if (moneyEl) moneyEl.innerText = `$${p.money.toLocaleString()}`;
+        
+        const ownedLands = boardTiles.filter(t => t.owner === p.id).map(t => t.name);
+        const landsEl = document.getElementById(`p${idx}-lands`);
+        if (landsEl) landsEl.innerText = ownedLands.length > 0 ? ownedLands.join(", ") : "無";
+
+        const isCurrentPlayersTurn = (idx === currentPlayerIndex);
+        const canControlThisPlayer = !isOnlineMode || (myPlayerIndex === idx);
+
+        const toolsContainer = document.getElementById(`p${idx}-physics-tools`);
+        if (toolsContainer) {
+          toolsContainer.innerHTML = "";
+          const itemConfigs = [
+            { key: 'lever', name: '槓桿', icon: 'fa-scale-balanced', color: 'bg-amber-600', desc: '買地建房7折' },
+            { key: 'pulley', name: '滑輪', icon: 'fa-weight-hanging', color: 'bg-blue-600', desc: '遠端建房/過路費5折' },
+            { key: 'wheel', name: '輪軸', icon: 'fa-circle-notch', color: 'bg-emerald-600', desc: '自選1~6點數' },
+            { key: 'gear', name: '齒輪', icon: 'fa-gears', color: 'bg-indigo-600', desc: '抽對手$1,500' },
+            { key: 'incline', name: '斜面', icon: 'fa-truck-ramp-box', color: 'bg-cyan-600', desc: '滑行1~5格' }
+          ];
+
+          let hasItems = false;
+          itemConfigs.forEach(item => {
+            const count = p.inventory[item.key] || 0;
+            if (count > 0) {
+              hasItems = true;
+              const btn = document.createElement("button");
+              const isUsable = isCurrentPlayersTurn && canControlThisPlayer && !isRolling;
+              btn.className = `${item.color} text-white px-2.5 py-1.5 rounded-xl text-sm font-black flex items-center gap-1.5 shadow-lg transition-all ${!isUsable ? 'opacity-40 cursor-not-allowed' : 'hover:brightness-125 active:scale-95'}`;
+              btn.innerHTML = `<i class="fa-solid ${item.icon}"></i> ${item.name} x${count}`;
+              btn.title = item.desc;
+              
+              if (isUsable) {
+                btn.onclick = () => usePhysicsItem(item.key);
+              }
+              toolsContainer.appendChild(btn);
+            }
+          });
+
+          if (p.activeBuffs.lever) {
+            toolsContainer.innerHTML += `<span class="bg-amber-500/30 text-amber-300 border-2 border-amber-500 px-2.5 py-1.5 rounded-xl text-xs font-black animate-pulse">⚡ 槓桿 7 折</span>`;
+          }
+          if (p.activeBuffs.pulley) {
+            toolsContainer.innerHTML += `<span class="bg-blue-500/30 text-blue-300 border-2 border-blue-500 px-2.5 py-1.5 rounded-xl text-xs font-black animate-pulse">⚡ 滑輪 5 折</span>`;
+          }
+
+          if (!hasItems && !p.activeBuffs.lever && !p.activeBuffs.pulley) {
+            toolsContainer.innerHTML = '<span class="bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-sm font-bold">背包空無一物</span>';
+          }
+        }
+
+        const card = document.getElementById(`p${idx}-card`);
+        const rollBtn = document.getElementById(`p${idx}-roll-btn`);
+        const leverageBtn = document.getElementById(`p${idx}-leverage-btn`);
+        
+        if (card && rollBtn) {
+          if (isCurrentPlayersTurn) {
+            card.classList.add("border-amber-400", "ring-4", "ring-amber-400/50");
+            card.classList.remove("border-slate-700");
+            
+            const isMyTurnToAct = canControlThisPlayer && !isRolling;
+            rollBtn.disabled = !isMyTurnToAct;
+            if (leverageBtn) leverageBtn.disabled = !isMyTurnToAct;
+          } else {
+            card.classList.remove("border-amber-400", "ring-4", "ring-amber-400/50");
+            card.classList.add("border-slate-700");
+            rollBtn.disabled = true;
+            if (leverageBtn) leverageBtn.disabled = true;
+          }
+        }
+      });
+
+      const currentP = players[currentPlayerIndex];
+      const isMyTurn = (!isOnlineMode) || (myPlayerIndex === currentPlayerIndex);
+      const turnMsg = `<i class="fa-solid fa-circle-play"></i> 輪到 ${currentP.name} ${isMyTurn ? '<span class="text-emerald-400">(你的回合)</span>' : ''}`;
+      
+      const indP1 = document.getElementById("turn-indicator-p1");
+      const indP2 = document.getElementById("turn-indicator-p2");
+      if (indP1) indP1.innerHTML = turnMsg;
+      if (indP2) indP2.innerHTML = turnMsg;
+    }
+
+    window.rollDice = function() {
+      if (isRolling) return;
+      if (isOnlineMode && myPlayerIndex !== currentPlayerIndex) return;
+
+      const p = players[currentPlayerIndex];
+      if (p.bankrupted) return;
+
+      isRolling = true;
+      updateUI();
+
+      const diceEl = document.getElementById("dice");
+      const diceIcon = document.getElementById("dice-icon");
+      if (diceEl) diceEl.classList.add("rolling");
+
+      let count = 0;
+      const interval = setInterval(() => {
+        const randomVal = Math.floor(Math.random() * 6) + 1;
+        if (diceIcon) diceIcon.className = `fa-solid ${diceIcons[randomVal - 1]}`;
+        count++;
+        if (count > 8) {
+          clearInterval(interval);
+          if (diceEl) diceEl.classList.remove("rolling");
+          const diceResult = Math.floor(Math.random() * 6) + 1;
+          if (diceIcon) diceIcon.className = `fa-solid ${diceIcons[diceResult - 1]}`;
+          addLog(`🎲 ${p.name} 擲出了 <b>${diceResult}</b> 點！`, "text-amber-300 font-black");
+          movePlayerRelative(p, diceResult);
+        }
+      }, 70);
+    };
+
+    function movePlayerRelative(p, steps) {
+      let stepsLeft = steps;
+      const moveInterval = setInterval(() => {
+        p.position = (p.position + 1) % boardTiles.length;
+        if (p.position === 0) {
+          p.money += 2000;
+          addLog(`🚩 ${p.name} 經過起點，獲得獎勵金 $2,000！`, "text-emerald-300 font-black");
+        }
+        renderPlayers();
+        stepsLeft--;
+        if (stepsLeft <= 0) {
+          clearInterval(moveInterval);
+          handleTileLanding(p);
+        }
+      }, 200);
+    }
+
+    function handleTileLanding(p) {
+      const tile = boardTiles[p.position];
+      addLog(`📍 ${p.name} 停留在【${tile.name}】`, "text-white font-bold");
+
+      if (tile.type === "physics") {
+        triggerPhysicsQuiz(p, tile.machineType);
+      } else if (tile.type === "property") {
+        if (tile.owner === null) {
+          let actualPrice = tile.price;
+          if (p.activeBuffs.lever) {
+            actualPrice = Math.floor(tile.price * 0.7);
+            addLog(`⚖️ 槓桿作用折抵！地產價格享 7 折優惠（原價 $${tile.price} 變為 $${actualPrice}）`, "text-amber-300 font-bold");
+          }
+          showPropertyPurchaseModal(p, tile, actualPrice);
+        } else if (tile.owner === p.id) {
+          if (tile.houses < 3) {
+            let houseCost = tile.housePrice;
+            if (p.activeBuffs.lever) {
+              houseCost = Math.floor(tile.housePrice * 0.7);
+            }
+            showModal(
+              "fa-house-chimney text-amber-400",
+              `加蓋房屋 (${tile.name})`,
+              `是否花費 <b class="text-amber-300">$${houseCost}</b> 在此加蓋房屋？（現有 ${tile.houses} 棟）`,
+              true,
+              () => {
+                if (p.money >= houseCost) {
+                  p.money -= houseCost;
+                  if (p.activeBuffs.lever) p.activeBuffs.lever = false;
+                  tile.houses++;
+                  addLog(`🏡 ${p.name} 花費 $${houseCost} 在 ${tile.name} 加蓋了 1 棟房屋！`, "text-emerald-300 font-bold");
+                } else {
+                  addLog(`${p.name} 現金不足，無法加蓋房屋。`, "text-rose-400 font-bold");
+                }
+                finishTurn();
+              },
+              finishTurn
+            );
+          } else {
+            addLog(`${tile.name} 已達最高房屋等級（3 棟）。`, "text-slate-400 font-bold");
+            finishTurn();
+          }
+        } else {
+          const owner = players[tile.owner];
+          let rent = tile.rent * (1 + tile.houses * 0.8);
+          if (p.activeBuffs.pulley) {
+            rent = Math.floor(rent * 0.5);
+            p.activeBuffs.pulley = false;
+            addLog(`🛞 動滑輪省力生效！過路費獲得 5 折減免！`, "text-blue-300 font-black");
+          }
+          rent = Math.floor(rent);
+          p.money -= rent;
+          owner.money += rent;
+          addLog(`💸 ${p.name} 踩到 ${owner.name} 的地產，支付過路費 $${rent.toLocaleString()}！`, "text-rose-300 font-black");
+          checkBankruptcy(p);
+          finishTurn();
+        }
+      } else if (tile.type === "chance") {
+        const card = chanceCards[Math.floor(Math.random() * chanceCards.length)];
+        showModal("fa-shuffle text-purple-400", `🎲 機會：${card.title}`, card.desc, false, () => {
+          card.action(p);
+          finishTurn();
+        });
+      } else if (tile.type === "fate") {
+        const card = fateCards[Math.floor(Math.random() * fateCards.length)];
+        showModal("fa-question text-purple-400", `🔮 命運：${card.title}`, card.desc, false, () => {
+          card.action(p);
+          finishTurn();
+        });
+      } else if (tile.type === "tax") {
+        p.money -= 1000;
+        addLog(`💸 ${p.name} 繳納物理實驗稅金 $1,000`, "text-rose-400 font-bold");
+        checkBankruptcy(p);
+        finishTurn();
+      } else {
+        finishTurn();
+      }
+    }
+
+    function usePhysicsItem(itemKey) {
+      if (isRolling) return;
+      if (isOnlineMode && myPlayerIndex !== currentPlayerIndex) return;
+
+      const p = players[currentPlayerIndex];
+      if (!p.inventory[itemKey] || p.inventory[itemKey] <= 0) return;
+
+      switch (itemKey) {
+        case "lever":
+          showModal(
+            "fa-scale-balanced text-amber-400",
+            "⚖️ 使用【槓桿道具卡】",
+            "開啟槓桿機械原理！<br>下一次<b>購買地產或加蓋房屋享 7 折優惠</b>！",
+            true,
+            () => {
+              p.inventory.lever--;
+              p.activeBuffs.lever = true;
+              addLog(`⚖️ ${p.name} 啟動【槓桿原理】，下一筆交易享 7 折省力折扣！`, "text-amber-300 font-black");
+              syncGameStateToPeer();
+              updateUI();
+            }
+          );
+          break;
+
+        case "pulley":
+          const myLands = boardTiles.filter(t => t.owner === p.id && t.houses < 3);
+          if (myLands.length > 0) {
+            const landBtns = myLands.map(t => `
+              <button onclick="executePulleyAddHouse(${t.id})" class="bg-blue-600 hover:bg-blue-500 text-white font-black py-2.5 px-4 rounded-xl text-sm sm:text-base border-2 border-blue-400 shadow-lg active:scale-95">
+                ${t.name} (現有 ${t.houses} 房)
+              </button>
+            `).join('');
+            
+            showModalCustomActions(
+              "fa-city text-blue-400",
+              "🛞 滑輪起重機加蓋",
+              "請點擊要遠端用滑輪吊車施工加蓋的地點：",
+              landBtns
+            );
+          } else {
+            showModal(
+              "fa-weight-hanging text-blue-400",
+              "🛞 使用【滑輪道具卡】",
+              "【動滑輪省力】：<br>啟動動滑輪，下一次踩對手土地過路費<b>直接打 5 折</b>！",
+              true,
+              () => {
+                p.inventory.pulley--;
+                p.activeBuffs.pulley = true;
+                addLog(`🛞 ${p.name} 啟動【動滑輪省力】，下一次過路費打 5 折！`, "text-blue-300 font-black");
+                syncGameStateToPeer();
+                updateUI();
+              }
+            );
+          }
+          break;
+
+        case "wheel":
+          const diceSelectHTML = `
+            <div class="grid grid-cols-6 gap-2 mt-2">
+              ${[1,2,3,4,5,6].map(num => `
+                <button onclick="executeWheelMove(${num})" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl text-lg border-2 border-emerald-400 shadow-lg active:scale-95">
+                  ${num}
+                </button>
+              `).join('')}
+            </div>
+          `;
+          showModalCustomActions(
+            "fa-circle-notch text-emerald-400",
+            "🏎️ 使用【輪軸道具卡】",
+            "請選擇您要轉動輪軸前往的骰子點數：",
+            diceSelectHTML
+          );
+          break;
+
+        case "gear":
+          const otherP = players[(p.id + 1) % players.length];
+          showModal(
+            "fa-gears text-indigo-400",
+            "⚙️ 使用【齒輪道具卡】",
+            `齒輪咬合高速轉動！<br>向對手 <b>${otherP.name}</b> 強制轉移能量與資金 <b>$1,500</b>！`,
+            true,
+            () => {
+              p.inventory.gear--;
+              otherP.money -= 1500;
+              p.money += 1500;
+              addLog(`⚙️ ${p.name} 運轉【齒輪連動】，向 ${otherP.name} 抽取 $1,500 資金！`, "text-indigo-300 font-black");
+              checkBankruptcy(otherP);
+              syncGameStateToPeer();
+              updateUI();
+            }
+          );
+          break;
+
+        case "incline":
+          const inclineSelectHTML = `
+            <div class="grid grid-cols-5 gap-2 mt-2">
+              ${[1,2,3,4,5].map(steps => `
+                <button onclick="executeInclineSlide(${steps})" class="bg-cyan-600 hover:bg-cyan-500 text-white font-black py-3 rounded-xl text-base border-2 border-cyan-400 shadow-lg active:scale-95">
+                  +${steps}格
+                </button>
+              `).join('')}
+            </div>
+          `;
+          showModalCustomActions(
+            "fa-truck-ramp-box text-cyan-400",
+            "📐 使用【斜面道具卡】",
+            "斜面傾角調整！請選擇要順著斜面滑行的步數：",
+            inclineSelectHTML
+          );
+          break;
+      }
+    }
+
+    window.executePulleyAddHouse = function(targetTileId) {
+      const p = players[currentPlayerIndex];
+      const targetTile = boardTiles.find(t => t.id === targetTileId);
+      if (targetTile) {
+        p.inventory.pulley--;
+        targetTile.houses++;
+        addLog(`🛞 ${p.name} 使用【滑輪起重機】，遠端為 ${targetTile.name} 免費加蓋房屋！`, "text-blue-300 font-black");
+        document.getElementById("modal").classList.add("hidden");
+        syncGameStateToPeer();
+        updateUI();
+      }
+    };
+
+    window.executeWheelMove = function(selectedSteps) {
+      const p = players[currentPlayerIndex];
+      p.inventory.wheel--;
+      document.getElementById("modal").classList.add("hidden");
+      addLog(`🏎️ ${p.name} 控制【輪軸傳動】，指定擲出 <b>${selectedSteps}</b> 點！`, "text-emerald-300 font-bold");
+      
+      const diceIcon = document.getElementById("dice-icon");
+      if (diceIcon) diceIcon.className = `fa-solid ${diceIcons[selectedSteps - 1]}`;
+      movePlayerRelative(p, selectedSteps);
+    };
+
+    window.executeInclineSlide = function(selectedSteps) {
+      const p = players[currentPlayerIndex];
+      p.inventory.incline--;
+      document.getElementById("modal").classList.add("hidden");
+      addLog(`📐 ${p.name} 順著【物理斜面】順暢滑行了 <b>${selectedSteps}</b> 格！`, "text-cyan-300 font-bold");
+      movePlayerRelative(p, selectedSteps);
+    };
+
+    function changeMoney(p, amount) {
+      p.money += amount;
+      if (amount < 0) {
+        checkBankruptcy(p);
+      }
+      updateUI();
+    }
+
+    function checkBankruptcy(p) {
+      if (p.money < 0 && !p.bankrupted) {
+        p.bankrupted = true;
+        addLog(`💥 ${p.name} 資金不足宣告破產！`, "text-rose-400 font-black");
+        showModal(
+          "fa-skull-crossbones text-rose-500",
+          "💥 玩家破產！",
+          `<b>${p.name}</b> 現金耗盡破產，遊戲結束！`,
+          false,
+          () => { location.reload(); }
+        );
+      }
+    }
+
+    window.openLeverageModal = function() {
+      const p = players[currentPlayerIndex];
+      if (isRolling) return;
+      if (isOnlineMode && myPlayerIndex !== currentPlayerIndex) return;
+
+      showModal(
+        "fa-chart-line text-indigo-400",
+        "📈 槓桿融資貸款",
+        `目前貸款金額：<b class="text-amber-300">$${p.loan.toLocaleString()}</b><br>每回合需支付 5% 利息。<br>確定向銀行貸款 <b>$5,000</b>？`,
+        true,
+        () => {
+          p.loan += 5000;
+          p.money += 5000;
+          addLog(`🏦 ${p.name} 成功進行槓桿融資，獲得 $5,000 資金！`, "text-indigo-300 font-black");
+          syncGameStateToPeer();
+          updateUI();
+        }
+      );
+    };
+
+    function triggerPhysicsQuiz(p, machineType) {
+      const quiz = physicsQuizzes.find(q => q.machine === machineType) || physicsQuizzes[0];
+      const isMyTurn = (!isOnlineMode) || (myPlayerIndex === currentPlayerIndex);
+
+      ["p1", "p2"].forEach(target => {
+        const modalIcon = document.getElementById(`modal-icon-${target}`);
+        const modalTitle = document.getElementById(`modal-title-${target}`);
+        const modalDesc = document.getElementById(`modal-desc-${target}`);
+        const actions = document.getElementById(`modal-actions-${target}`);
+
+        if (modalIcon) {
+          modalIcon.className = "text-4xl sm:text-5xl mb-3 text-amber-400";
+          modalIcon.innerHTML = `<i class="fa-solid fa-brain"></i>`;
+        }
+        if (modalTitle) modalTitle.innerText = quiz.title;
+        if (modalDesc) {
+          modalDesc.innerHTML = `
+            <div class="text-left bg-slate-900 p-4 rounded-2xl border-2 border-slate-700 mb-3">
+              <p class="font-black text-amber-300 text-sm sm:text-base leading-snug">${quiz.question}</p>
+            </div>
+            ${!isMyTurn ? '<div class="text-sm font-bold text-slate-400 animate-pulse">（等待對手回答問題中...）</div>' : ''}
+          `;
+        }
+
+        if (actions) {
+          actions.innerHTML = "";
+          if (isMyTurn) {
+            quiz.options.forEach((opt, idx) => {
+              const btn = document.createElement("button");
+              btn.className = "bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 px-4 rounded-2xl text-sm sm:text-base transition-all w-full text-left border-2 border-indigo-400 shadow-lg active:scale-95";
+              btn.innerText = opt;
+              btn.onclick = () => {
+                if (idx === quiz.answer) {
+                  showModal(
+                    "fa-circle-check text-emerald-400",
+                    "🎉 回答正確！",
+                    `${quiz.explanation}`,
+                    false,
+                    () => {
+                      quiz.reward(p);
+                      finishTurn();
+                    }
+                  );
+                } else {
+                  showModal(
+                    "fa-circle-xmark text-rose-400",
+                    "❌ 答錯囉！",
+                    "沒關係！再接再勵！機械原理：當施力臂大於抗力臂時才能省力！",
+                    false,
+                    finishTurn
+                  );
+                }
+              };
+              actions.appendChild(btn);
+            });
+          }
+        }
+      });
+
+      document.getElementById("modal").classList.remove("hidden");
+    }
+
+    function showPropertyPurchaseModal(p, tile, actualPrice) {
+      const isMyTurn = (!isOnlineMode) || (myPlayerIndex === currentPlayerIndex);
+
+      ["p1", "p2"].forEach(target => {
+        const modalIcon = document.getElementById(`modal-icon-${target}`);
+        const modalTitle = document.getElementById(`modal-title-${target}`);
+        const modalDesc = document.getElementById(`modal-desc-${target}`);
+        const actions = document.getElementById(`modal-actions-${target}`);
+
+        if (modalIcon) {
+          modalIcon.className = "text-4xl sm:text-5xl mb-3 text-amber-400";
+          modalIcon.innerHTML = `<i class="fa-solid fa-building-columns"></i>`;
+        }
+        if (modalTitle) modalTitle.innerText = `購買 ${tile.name}`;
+        if (modalDesc) {
+          modalDesc.innerHTML = `
+            選擇購買方式：<br>
+            <b>全額現購</b>：全額支付 <b class="text-amber-400 text-xl font-black">$${actualPrice.toLocaleString()}</b>
+            ${!isMyTurn ? '<div class="mt-2 text-sm text-slate-400 animate-pulse">（等待對手選擇是否購買...）</div>' : ''}
+          `;
+        }
+
+        if (actions) {
+          actions.innerHTML = "";
+          if (isMyTurn) {
+            const fullBtn = document.createElement("button");
+            fullBtn.className = "bg-amber-500 hover:bg-amber-400 text-slate-900 font-black py-3 px-6 rounded-2xl text-sm sm:text-base transition-all shadow-xl active:scale-95";
+            fullBtn.innerText = `全額現購 ($${actualPrice.toLocaleString()})`;
+            fullBtn.onclick = () => {
+              if (p.money >= actualPrice) {
+                p.money -= actualPrice;
+                if (p.activeBuffs.lever) p.activeBuffs.lever = false;
+                tile.owner = p.id;
+                addLog(`🏢 ${p.name} 花費 $${actualPrice.toLocaleString()} 購買了 ${tile.name}！`, "text-emerald-400 font-black");
+              } else {
+                addLog(`${p.name} 現金不足，無法購買 ${tile.name}。`, "text-rose-400 font-black");
+              }
+              document.getElementById("modal").classList.add("hidden");
+              finishTurn();
+            };
+
+            const cancelBtn = document.createElement("button");
+            cancelBtn.className = "bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-6 rounded-2xl text-sm sm:text-base transition-all shadow active:scale-95";
+            cancelBtn.innerText = "放棄";
+            cancelBtn.onclick = () => {
+              document.getElementById("modal").classList.add("hidden");
+              finishTurn();
+            };
+
+            actions.appendChild(fullBtn);
+            actions.appendChild(cancelBtn);
+          }
+        }
+      });
+
+      document.getElementById("modal").classList.remove("hidden");
+    }
+
+    function showModal(iconClass, title, desc, showConfirm, onConfirm = null, onCancel = null) {
+      const modal = document.getElementById("modal");
+      
+      ["p1", "p2"].forEach(target => {
+        const modalIcon = document.getElementById(`modal-icon-${target}`);
+        const modalTitle = document.getElementById(`modal-title-${target}`);
+        const modalDesc = document.getElementById(`modal-desc-${target}`);
+        const actions = document.getElementById(`modal-actions-${target}`);
+
+        if (modalIcon) {
+          modalIcon.className = `text-4xl sm:text-5xl mb-3 ${iconClass.includes('text-') ? iconClass : iconClass + ' text-amber-400'}`;
+          modalIcon.innerHTML = `<i class="fa-solid ${iconClass.split(' ')[0]}"></i>`;
+        }
+        if (modalTitle) modalTitle.innerText = title;
+        if (modalDesc) modalDesc.innerHTML = desc;
+
+        if (actions) {
+          actions.innerHTML = "";
+          const confirmBtn = document.createElement("button");
+          confirmBtn.className = "bg-amber-500 hover:bg-amber-400 text-slate-900 font-black py-3 px-8 rounded-2xl text-sm sm:text-base transition-all shadow-xl active:scale-95";
+          confirmBtn.innerText = "確認";
+          confirmBtn.onclick = () => {
+            modal.classList.add("hidden");
+            if (onConfirm) onConfirm();
+          };
+          actions.appendChild(confirmBtn);
+
+          if (showConfirm) {
+            const cancelBtn = document.createElement("button");
+            cancelBtn.className = "bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-6 rounded-2xl text-sm sm:text-base transition-all shadow active:scale-95";
+            cancelBtn.innerText = "取消";
+            cancelBtn.onclick = () => {
+              modal.classList.add("hidden");
+              if (onCancel) onCancel();
+            };
+            actions.appendChild(cancelBtn);
+          }
+        }
+      });
+
+      modal.classList.remove("hidden");
+    }
+
+    function showModalCustomActions(iconClass, title, desc, customHTML) {
+      const modal = document.getElementById("modal");
+      ["p1", "p2"].forEach(target => {
+        const modalIcon = document.getElementById(`modal-icon-${target}`);
+        const modalTitle = document.getElementById(`modal-title-${target}`);
+        const modalDesc = document.getElementById(`modal-desc-${target}`);
+        const actions = document.getElementById(`modal-actions-${target}`);
+
+        if (modalIcon) {
+          modalIcon.className = `text-4xl sm:text-5xl mb-3 ${iconClass.includes('text-') ? iconClass : iconClass + ' text-amber-400'}`;
+          modalIcon.innerHTML = `<i class="fa-solid ${iconClass.split(' ')[0]}"></i>`;
+        }
+        if (modalTitle) modalTitle.innerText = title;
+        if (modalDesc) modalDesc.innerHTML = desc;
+        if (actions) actions.innerHTML = customHTML;
+      });
+      modal.classList.remove("hidden");
+    }
+
+    function addLog(msg, colorClass = "text-slate-300") {
+      ["game-log-p1", "game-log-p2"].forEach(logId => {
+        const logBox = document.getElementById(logId);
+        if (!logBox) return;
+        const entry = document.createElement("div");
+        entry.className = `${colorClass} leading-tight mb-1`;
+        entry.innerHTML = `> ${msg}`;
+        logBox.appendChild(entry);
+        logBox.scrollTop = logBox.scrollHeight;
+      });
+
+      // 同步 Log 訊息給遠端
+      if (isOnlineMode && peerConn && peerConn.open && myPlayerIndex === currentPlayerIndex) {
+        peerConn.send({
+          type: 'LOG',
+          msg: msg,
+          colorClass: colorClass
+        });
+      }
+    }
+
+    function finishTurn() {
+      const p = players[currentPlayerIndex];
+
+      if (p.loan > 0 && !p.bankrupted) {
+        const interest = Math.max(100, Math.floor(p.loan * 0.05));
+        p.money -= interest;
+        addLog(`💸 ${p.name} 支付了貸款利息 $${interest}。`, "text-rose-300 font-bold");
+        checkBankruptcy(p);
+      }
+
+      isRolling = false;
+
+      if (!players.some(player => player.bankrupted)) {
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+      }
+
+      syncGameStateToPeer();
+      updateUI();
+    }
+
+    window.openAvatarModal = function(playerIdx) {
+      if (isOnlineMode && playerIdx !== myPlayerIndex) {
+        addLog("ℹ️ 線上模式下，只能修改自己的角色頭像與暱稱喔！", "text-amber-300 font-bold");
+        return;
+      }
+
+      editingPlayerIndex = playerIdx;
+      const p = players[playerIdx];
+      tempAvatarState = {
+        name: p.name,
+        icon: p.icon,
+        color: p.color,
+        customAvatar: p.customAvatar,
+        avatarType: p.avatarType || 'icon'
+      };
+
+      document.getElementById("avatar-input-name").value = tempAvatarState.name;
+      document.getElementById("avatar-url-input").value = tempAvatarState.customAvatar || "";
+      document.getElementById("avatar-file-input").value = "";
+
+      switchAvatarTab(tempAvatarState.avatarType);
+      updateAvatarPreview();
+
+      document.getElementById("avatar-modal").classList.remove("hidden");
+    };
+
+    window.closeAvatarModal = function() {
+      document.getElementById("avatar-modal").classList.add("hidden");
+    };
+
+    window.switchAvatarTab = function(type) {
+      tempAvatarState.avatarType = type;
+      const btnIcon = document.getElementById("tab-btn-icon");
+      const btnImage = document.getElementById("tab-btn-image");
+      const tabIcon = document.getElementById("avatar-tab-icon");
+      const tabImage = document.getElementById("avatar-tab-image");
+
+      if (type === 'icon') {
+        btnIcon.className = "flex-1 py-2 px-3 rounded-xl font-bold text-sm bg-amber-500 text-slate-900 border-2 border-amber-400";
+        btnImage.className = "flex-1 py-2 px-3 rounded-xl font-bold text-sm bg-slate-700 text-slate-300 border-2 border-slate-600";
+        tabIcon.classList.remove("hidden");
+        tabImage.classList.add("hidden");
+      } else {
+        btnImage.className = "flex-1 py-2 px-3 rounded-xl font-bold text-sm bg-amber-500 text-slate-900 border-2 border-amber-400";
+        btnIcon.className = "flex-1 py-2 px-3 rounded-xl font-bold text-sm bg-slate-700 text-slate-300 border-2 border-slate-600";
+        tabImage.classList.remove("hidden");
+        tabIcon.classList.add("hidden");
+      }
+      updateAvatarPreview();
+    };
+
+    window.selectAvatarIcon = function(icon) {
+      tempAvatarState.icon = icon;
+      tempAvatarState.avatarType = 'icon';
+      updateAvatarPreview();
+    };
+
+    window.selectAvatarColor = function(colorClass) {
+      tempAvatarState.color = colorClass;
+      updateAvatarPreview();
+    };
+
+    window.handleAvatarFileUpload = function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          tempAvatarState.customAvatar = evt.target.result;
+          tempAvatarState.avatarType = 'image';
+          updateAvatarPreview();
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    window.handleAvatarUrlInput = function(e) {
+      const url = e.target.value.trim();
+      if (url) {
+        tempAvatarState.customAvatar = url;
+        tempAvatarState.avatarType = 'image';
+        updateAvatarPreview();
+      }
+    };
+
+    window.updateAvatarPreview = function() {
+      const previewBox = document.getElementById("avatar-preview-box");
+      const previewName = document.getElementById("avatar-preview-name");
+      const inputName = document.getElementById("avatar-input-name");
+
+      if (previewName && inputName) {
+        previewName.innerText = inputName.value || tempAvatarState.name;
+      }
+
+      if (previewBox) {
+        previewBox.className = `w-20 h-20 rounded-full ${tempAvatarState.color} flex items-center justify-center text-4xl border-4 border-white shadow-xl overflow-hidden mb-2`;
+        
+        if (tempAvatarState.avatarType === 'image' && tempAvatarState.customAvatar) {
+          previewBox.innerHTML = `<img src="${tempAvatarState.customAvatar}" class="w-full h-full object-cover rounded-full" alt="preview" onerror="this.onerror=null; this.src='https://placehold.co/100x100/1e293b/f59e0b?text=User';">`;
+        } else if (tempAvatarState.icon.startsWith('fa-')) {
+          previewBox.innerHTML = `<i class="fa-solid ${tempAvatarState.icon} text-white"></i>`;
+        } else {
+          previewBox.innerHTML = `<span class="text-white font-bold">${tempAvatarState.icon}</span>`;
+        }
+      }
+    };
+
+    window.saveAvatarSettings = function() {
+      const inputName = document.getElementById("avatar-input-name").value.trim();
+      const p = players[editingPlayerIndex];
+
+      if (inputName) p.name = inputName;
+      p.icon = tempAvatarState.icon;
+      p.color = tempAvatarState.color;
+      p.customAvatar = tempAvatarState.customAvatar;
+      p.avatarType = tempAvatarState.avatarType;
+
+      addLog(`🎨 ${p.name} 更新了玩家頭像與設定！`, "text-amber-300 font-bold");
+      renderPlayers();
+      syncGameStateToPeer();
+      updateUI();
+      closeAvatarModal();
+    };
+
+    // 啟動應用程式
+    window.onload = () => {
+      initBoard();
+    };
+  </script>
+</body>
+</html>
