@@ -10,59 +10,54 @@ const quizRewardConfig = {
 
 const fallbackQuizRows = [
   {
-    machine: "lever",
     title: "槓桿原理挑戰",
     question: "想用比較小的力抬起重物，施力點通常應該放在哪裡？",
-    option1: "離支點遠一點",
-    option2: "離支點近一點",
-    option3: "直接放在支點上",
-    answer: "1",
-    explanation: "答對了！施力臂越長，越容易產生足夠力矩。",
-    rewardItem: "lever"
+    optionA: "離支點遠一點",
+    optionB: "離支點近一點",
+    optionC: "直接放在支點上",
+    optionD: "",
+    answer: "A",
+    explanation: "答對了！施力臂越長，越容易產生足夠力矩。"
   },
   {
-    machine: "pulley",
     title: "滑輪省力挑戰",
     question: "動滑輪最主要的效果是什麼？",
-    option1: "改變物體顏色",
-    option2: "省力但拉繩距離較長",
-    option3: "讓重力消失",
-    answer: "2",
-    explanation: "答對了！動滑輪能分擔重量，所以比較省力。",
-    rewardItem: "pulley"
+    optionA: "改變物體顏色",
+    optionB: "省力但拉繩距離較長",
+    optionC: "讓重力消失",
+    optionD: "",
+    answer: "B",
+    explanation: "答對了！動滑輪能分擔重量，所以比較省力。"
   },
   {
-    machine: "wheel",
     title: "輪軸傳動挑戰",
     question: "輪軸能讓工作變輕鬆，關鍵原因比較接近哪一個？",
-    option1: "利用較大的輪半徑增加力矩",
-    option2: "讓物體變輕",
-    option3: "讓時間停止",
-    answer: "1",
-    explanation: "答對了！輪越大，同樣的力可以產生更大的轉動效果。",
-    rewardItem: "wheel"
+    optionA: "利用較大的輪半徑增加力矩",
+    optionB: "讓物體變輕",
+    optionC: "讓時間停止",
+    optionD: "",
+    answer: "A",
+    explanation: "答對了！輪越大，同樣的力可以產生更大的轉動效果。"
   },
   {
-    machine: "gear",
     title: "齒輪咬合挑戰",
     question: "兩個互相咬合的齒輪，轉動方向會如何？",
-    option1: "方向相同",
-    option2: "方向相反",
-    option3: "完全不會轉",
-    answer: "2",
-    explanation: "答對了！相鄰齒輪會朝相反方向旋轉。",
-    rewardItem: "gear"
+    optionA: "方向相同",
+    optionB: "方向相反",
+    optionC: "完全不會轉",
+    optionD: "",
+    answer: "B",
+    explanation: "答對了！相鄰齒輪會朝相反方向旋轉。"
   },
   {
-    machine: "incline",
     title: "斜面省力挑戰",
     question: "斜面為什麼能省力？",
-    option1: "把重物推上較長距離，降低需要的力",
-    option2: "讓重量直接歸零",
-    option3: "只靠運氣",
-    answer: "1",
-    explanation: "答對了！斜面用較長路徑換取較小施力。",
-    rewardItem: "incline"
+    optionA: "把重物推上較長距離，降低需要的力",
+    optionB: "讓重量直接歸零",
+    optionC: "只靠運氣",
+    optionD: "",
+    answer: "A",
+    explanation: "答對了！斜面用較長路徑換取較小施力。"
   }
 ];
 
@@ -115,15 +110,23 @@ function csvTextToObjects(text) {
 }
 
 function rowToQuiz(row) {
-  const answerNumber = Number.parseInt(row.answer, 10);
-  const rewardItem = row.rewardItem || row.machine;
+  let answerNumber = Number.parseInt(row.answer, 10);
+  if (Number.isNaN(answerNumber) && typeof row.answer === 'string') {
+    const ansStr = row.answer.toUpperCase().trim();
+    if (ansStr === 'A') answerNumber = 1;
+    else if (ansStr === 'B') answerNumber = 2;
+    else if (ansStr === 'C') answerNumber = 3;
+    else if (ansStr === 'D') answerNumber = 4;
+  }
+  
+  const rewardItem = row.rewardItem || row.machine || "lever";
   const reward = quizRewardConfig[rewardItem] || quizRewardConfig.lever;
 
   return {
-    machine: row.machine,
+    machine: row.machine || "lever",
     title: row.title,
     question: row.question,
-    options: [row.option1, row.option2, row.option3].filter(Boolean),
+    options: [row.optionA, row.optionB, row.optionC, row.optionD].filter(Boolean),
     answer: Number.isFinite(answerNumber) ? Math.max(0, answerNumber - 1) : 0,
     explanation: row.explanation,
     reward: (p) => {
@@ -135,7 +138,7 @@ function rowToQuiz(row) {
 
 function buildPhysicsQuizzes(rows) {
   return rows
-    .filter(row => row.machine && row.title && row.question && row.option1 && row.answer)
+    .filter(row => row.title && row.question && row.optionA && row.answer)
     .map(rowToQuiz);
 }
 
