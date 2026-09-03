@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>大富翁：物理簡單機械大冒險 (線上雙人版) v1.3.1</title>
+  <title>大富翁：物理簡單機械大冒險 (線上雙人版) v1.3.2</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -87,7 +87,7 @@
   <header class="max-w-7xl mx-auto w-full flex flex-wrap items-center justify-between bg-slate-800/80 backdrop-blur border border-slate-700 px-4 py-2.5 rounded-2xl mb-2 gap-2 shadow-lg relative">
     <div class="flex items-center gap-3">
       <span class="text-amber-400 font-black text-lg flex items-center gap-2">
-        <i class="fa-solid fa-atom text-xl animate-spin"></i> 立體學院大富翁 <span class="text-xs bg-amber-500 text-slate-900 px-2 py-0.5 rounded-full font-bold">v1.3.1</span>
+        <i class="fa-solid fa-atom text-xl animate-spin"></i> 立體學院大富翁 <span class="text-xs bg-amber-500 text-slate-900 px-2 py-0.5 rounded-full font-bold">v1.3.2</span>
       </span>
       <span id="room-badge" class="bg-slate-700 text-slate-300 px-3 py-1 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 border border-slate-600">
         <i class="fa-solid fa-plug text-yellow-400"></i> <span id="room-status-text">連線準備中...</span>
@@ -214,7 +214,7 @@
       
       <div class="text-center mb-6">
         <div class="text-5xl text-amber-400 mb-2"><i class="fa-solid fa-wifi"></i></div>
-        <h2 class="text-2xl sm:text-3xl font-black text-white flex justify-center items-center gap-2">線上雙人對戰大廳 <span class="text-sm bg-amber-500 text-slate-900 px-2 py-0.5 rounded-full font-bold">v1.3.1</span></h2>
+        <h2 class="text-2xl sm:text-3xl font-black text-white flex justify-center items-center gap-2">線上雙人對戰大廳 <span class="text-sm bg-amber-500 text-slate-900 px-2 py-0.5 rounded-full font-bold">v1.3.2</span></h2>
         <p class="text-slate-300 text-sm mt-1">創建房間傳給朋友，或輸入房間號碼跨裝置對戰！</p>
       </div>
 
@@ -267,6 +267,8 @@
 
   <!-- 彈窗 Modal: 對決動態訊息卡 -->
   <div id="modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] hidden flex flex-col justify-center items-center p-3 sm:p-6 z-50 overflow-y-auto">
+    <!-- SVG 連接線畫布 -->
+    <svg id="modal-svg-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-[-1]"></svg>
     <div class="w-full max-w-md my-auto flex flex-col gap-4 py-2">
       
       <!-- 單一視角卡片 -->
@@ -1450,10 +1452,16 @@
 
     function animateModalFromElement(elId) {
       const modalCard = document.getElementById("modal-card-main");
+      const svgCanvas = document.getElementById("modal-svg-canvas");
       if (!modalCard) return;
+      if (svgCanvas) svgCanvas.innerHTML = ""; // Clear old line
+
       let startX = window.innerWidth / 2;
       let startY = window.innerHeight / 2;
       let startScale = 0.5;
+      
+      const endX = window.innerWidth / 2;
+      const endY = window.innerHeight / 2;
 
       if (elId) {
         const el = document.getElementById(elId);
@@ -1462,11 +1470,42 @@
           startX = rect.left + rect.width / 2;
           startY = rect.top + rect.height / 2;
           startScale = 0.1;
+
+          // Draw the connecting line
+          if (svgCanvas) {
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            // A simple cubic bezier curve from tile to center
+            const cp1x = startX;
+            const cp1y = startY + (endY - startY) * 0.5;
+            const cp2x = endX;
+            const cp2y = startY + (endY - startY) * 0.5;
+            
+            path.setAttribute("d", `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`);
+            path.setAttribute("fill", "transparent");
+            path.setAttribute("stroke", "rgba(245, 158, 11, 0.6)"); // amber-500
+            path.setAttribute("stroke-width", "4");
+            path.setAttribute("stroke-dasharray", "8, 8");
+            path.style.animation = "dash 1s linear infinite";
+            
+            // Add definition for dash animation if not exists
+            if (!document.getElementById("dash-anim-style")) {
+              const style = document.createElement("style");
+              style.id = "dash-anim-style";
+              style.innerHTML = `@keyframes dash { to { stroke-dashoffset: -16; } }`;
+              document.head.appendChild(style);
+            }
+
+            svgCanvas.appendChild(path);
+
+            // Animate line opacity
+            path.animate([
+              { opacity: 0 },
+              { opacity: 1 }
+            ], { duration: 700, easing: 'ease-out' });
+          }
         }
       }
 
-      const endX = window.innerWidth / 2;
-      const endY = window.innerHeight / 2;
       const dx = startX - endX;
       const dy = startY - endY;
 
@@ -1474,7 +1513,7 @@
         { transform: `translate(${dx}px, ${dy}px) scale(${startScale})`, opacity: 0 },
         { transform: 'translate(0, 0) scale(1)', opacity: 1 }
       ], {
-        duration: 400,
+        duration: 700,
         easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)'
       });
     }
