@@ -163,6 +163,45 @@ async function loadQuestions() {
     console.warn("Using fallback quizzes.", err);
     questionsDB = buildQuizzes(fallbackQuizRows);
   }
+  
+  // Extract unique titles for weight configuration
+  const uniqueTitles = [...new Set(questionsDB.map(q => q.title))];
+  // Initialize default weights if not set (equal weight)
+  if (Object.keys(quizWeights).length === 0) {
+    uniqueTitles.forEach(t => quizWeights[t] = 100 / uniqueTitles.length);
+  }
+  
+  window.uniqueQuizTitles = uniqueTitles;
+}
+
+function getQuizByWeight() {
+  if (questionsDB.length === 0) return null;
+  
+  // Filter questions that have >0 weight
+  const validTitles = Object.keys(quizWeights).filter(t => quizWeights[t] > 0);
+  if (validTitles.length === 0) {
+    // If all zero, just random from all
+    return questionsDB[Math.floor(Math.random() * questionsDB.length)];
+  }
+
+  // Pick a random title based on weights
+  const totalWeight = validTitles.reduce((sum, t) => sum + quizWeights[t], 0);
+  let randomVal = Math.random() * totalWeight;
+  let selectedTitle = validTitles[0];
+  
+  for (const t of validTitles) {
+    randomVal -= quizWeights[t];
+    if (randomVal <= 0) {
+      selectedTitle = t;
+      break;
+    }
+  }
+
+  // Filter questions with selected title
+  const questionsOfTitle = questionsDB.filter(q => q.title === selectedTitle);
+  if (questionsOfTitle.length === 0) return questionsDB[Math.floor(Math.random() * questionsDB.length)];
+  
+  return questionsOfTitle[Math.floor(Math.random() * questionsOfTitle.length)];
 }
 
 async function loadFloorRules() {
@@ -184,3 +223,4 @@ async function loadFloorRules() {
 }
 
 window.quizzesReady = Promise.all([loadQuestions(), loadFloorRules()]);
+window.getQuizByWeight = getQuizByWeight;
