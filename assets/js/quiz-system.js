@@ -1,4 +1,5 @@
-let physicsQuizzes = [];
+let questionsDB = [];
+let floorRules = [];
 
 const quizRewardConfig = {
   lever: { label: "槓桿", colorClass: "text-amber-300 font-black" },
@@ -99,7 +100,7 @@ function csvTextToObjects(text) {
   const rows = parseCsv(text);
   if (rows.length < 2) return [];
 
-  const headers = rows[0].map(header => header.trim());
+  const headers = rows[0].map(header => header.trim().replace(/^\uFEFF/, '').replace(/^ï»¿/, ''));
   return rows.slice(1).map(row => {
     const item = {};
     headers.forEach((header, index) => {
@@ -108,6 +109,13 @@ function csvTextToObjects(text) {
     return item;
   });
 }
+
+const subjectNames = {
+  math: "數學",
+  english: "英文",
+  science: "自然",
+  chinese: "國文"
+};
 
 function rowToQuiz(row) {
   let answerNumber = Number.parseInt(row.answer, 10);
@@ -119,43 +127,60 @@ function rowToQuiz(row) {
     else if (ansStr === 'D') answerNumber = 4;
   }
   
-  const rewardItem = row.rewardItem || row.machine || "lever";
-  const reward = quizRewardConfig[rewardItem] || quizRewardConfig.lever;
+  const subj = row.subject ? row.subject.toLowerCase() : 'chinese';
+  const subjName = subjectNames[subj] || subj;
 
   return {
-    machine: row.machine || "lever",
+    subject: subj,
     title: row.title,
     question: row.question,
     options: [row.optionA, row.optionB, row.optionC, row.optionD].filter(Boolean),
     answer: Number.isFinite(answerNumber) ? Math.max(0, answerNumber - 1) : 0,
     explanation: row.explanation,
     reward: (p) => {
-      p.inventory[rewardItem] = (p.inventory[rewardItem] || 0) + 1;
-      addLog(`🎁 ${p.name} 獲得【${reward.label}道具卡】！`, reward.colorClass);
+      p.scores = p.scores || { math: 0, english: 0, science: 0, chinese: 0 };
+      p.scores[subj] = (p.scores[subj] || 0) + 100;
+      addLog(`🎁 ${p.name} 答對了！獲得【${subjName}】積分 100 分！`, "text-amber-300 font-black");
     }
   };
 }
 
-function buildPhysicsQuizzes(rows) {
+function buildQuizzes(rows) {
   return rows
     .filter(row => row.title && row.question && row.optionA && row.answer)
     .map(rowToQuiz);
 }
 
-async function loadPhysicsQuizzes() {
+async function loadQuestions() {
   try {
-    const response = await fetch("assets/data/physics-quizzes.csv", { cache: "no-store" });
+    const response = await fetch("assets/data/questions.csv", { cache: "no-store" });
     if (!response.ok) throw new Error(`CSV load failed: ${response.status}`);
 
     const csvText = await response.text();
-    const loadedQuizzes = buildPhysicsQuizzes(csvTextToObjects(csvText));
-    physicsQuizzes = loadedQuizzes.length > 0 ? loadedQuizzes : buildPhysicsQuizzes(fallbackQuizRows);
+    const loadedQuizzes = buildQuizzes(csvTextToObjects(csvText));
+    questionsDB = loadedQuizzes.length > 0 ? loadedQuizzes : buildQuizzes(fallbackQuizRows);
   } catch (err) {
-    console.warn("Using fallback physics quizzes.", err);
-    physicsQuizzes = buildPhysicsQuizzes(fallbackQuizRows);
+    console.warn("Using fallback quizzes.", err);
+    questionsDB = buildQuizzes(fallbackQuizRows);
   }
-
-  return physicsQuizzes;
 }
 
-window.physicsQuizzesReady = loadPhysicsQuizzes();
+async function loadFloorRules() {
+  try {
+    const response = await fetch("assets/data/floor-rules.csv", { cache: "no-store" });
+    if (response.ok) {
+      const csvText = await response.text();
+      floorRules = csvTextToObjects(csvText).map(r => ({
+        floor: parseInt(r.floor),
+        math: parseInt(r.math) || 0,
+        english: parseInt(r.english) || 0,
+        science: parseInt(r.science) || 0,
+        chinese: parseInt(r.chinese) || 0
+      }));
+    }
+  } catch (err) {
+    console.error("Failed to load floor rules", err);
+  }
+}
+
+window.quizzesReady = Promise.all([loadQuestions(), loadFloorRules()]);

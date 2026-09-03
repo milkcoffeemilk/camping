@@ -63,6 +63,13 @@
       background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
       position: relative;
       transition: all 0.2s ease;
+      border-bottom-width: 8px !important;
+      box-shadow: 0 8px 0 0 rgba(15, 23, 42, 0.7);
+    }
+    .road-tile:active {
+      transform: translateY(4px);
+      border-bottom-width: 4px !important;
+      box-shadow: 0 4px 0 0 rgba(15, 23, 42, 0.7);
     }
     .road-tile::after {
       content: '';
@@ -77,15 +84,17 @@
 <body class="bg-slate-900 text-white min-h-screen flex flex-col justify-between p-2 md:p-4 selection:bg-amber-500 selection:text-slate-900">
 
   <!-- 頂部線上連線資訊與功能列 -->
-  <header class="max-w-7xl mx-auto w-full flex flex-wrap items-center justify-between bg-slate-800/80 backdrop-blur border border-slate-700 px-4 py-2.5 rounded-2xl mb-2 gap-2 shadow-lg">
+  <header class="max-w-7xl mx-auto w-full flex flex-wrap items-center justify-between bg-slate-800/80 backdrop-blur border border-slate-700 px-4 py-2.5 rounded-2xl mb-2 gap-2 shadow-lg relative">
     <div class="flex items-center gap-3">
       <span class="text-amber-400 font-black text-lg flex items-center gap-2">
-        <i class="fa-solid fa-atom text-xl animate-spin"></i> 物理大富翁
+        <i class="fa-solid fa-atom text-xl animate-spin"></i> 立體學院大富翁
       </span>
       <span id="room-badge" class="bg-slate-700 text-slate-300 px-3 py-1 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 border border-slate-600">
         <i class="fa-solid fa-plug text-yellow-400"></i> <span id="room-status-text">連線準備中...</span>
       </span>
     </div>
+    
+    <span class="absolute -bottom-4 right-2 text-[10px] text-slate-500 font-mono">v1.1</span>
 
     <div class="flex items-center gap-2">
       <button onclick="toggleTopCardFlip()" id="flip-view-btn" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl border border-slate-600 transition-all active:scale-95 flex items-center gap-1.5">
@@ -121,10 +130,10 @@
           <span id="p1-money" class="text-2xl md:text-3xl font-black text-amber-300 tracking-wider">$15,000</span>
         </div>
 
-        <!-- 機械道具區 & 動作按鈕 -->
+        <!-- 科目積分區 & 動作按鈕 -->
         <div class="flex items-center gap-3 w-full md:w-auto justify-end flex-wrap">
-          <div class="flex items-center gap-2 flex-wrap" id="p1-physics-tools">
-            <span class="bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-sm font-bold">背包空無一物</span>
+          <div class="flex items-center gap-2 flex-wrap" id="p1-scores">
+            <span class="bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-sm font-bold">目前無積分</span>
           </div>
           <button id="p1-leverage-btn" onclick="openLeverageModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm md:text-base font-black py-2.5 px-4 rounded-xl transition-all shadow-lg flex items-center gap-1.5 active:scale-95 disabled:opacity-40">
             <i class="fa-solid fa-chart-line"></i> 槓桿融資
@@ -136,15 +145,29 @@
       </div>
     </div>
 
-    <!-- 🎲 中央街道與蜿蜒棋盤區域 -->
-    <div class="bg-slate-800/90 p-2 md:p-4 rounded-3xl shadow-2xl border-4 border-slate-700 relative my-auto">
-      <div class="text-center text-xs md:text-sm text-amber-400 font-black mb-1 flex items-center justify-center gap-2">
-        <i class="fa-solid fa-arrows-up-down-left-right"></i> 蜿蜒城市街道地圖（自由滑動探索） <i class="fa-solid fa-arrows-up-down-left-right"></i>
+    <!-- 🎲 中央街道與立體棋盤區域 -->
+    <div class="flex gap-2 relative my-auto">
+      <!-- 左側樓層指示高塔 -->
+      <div class="hidden md:flex flex-col justify-end w-12 shrink-0 bg-slate-800/90 rounded-2xl border-4 border-slate-700 p-1 shadow-xl">
+        <div class="text-slate-400 text-[10px] font-bold text-center mb-1">樓層塔</div>
+        <div id="tower-floors" class="flex flex-col-reverse gap-1">
+          <!-- JS dynamic floors -->
+        </div>
       </div>
       
-      <div class="street-scroll-container">
-        <div id="board" class="street-grid relative">
-          <!-- 蜿蜒街道格與中央畫面由 JavaScript 動態生成 -->
+      <!-- 棋盤本體 -->
+      <div class="flex-1 bg-slate-800/90 p-2 md:p-4 rounded-3xl shadow-2xl border-4 border-slate-700 relative">
+        <div class="flex justify-between items-center mb-1">
+          <div class="text-xs md:text-sm text-amber-400 font-black flex items-center gap-2">
+            <i class="fa-solid fa-arrows-up-down-left-right"></i> 立體學院街道（自由滑動）
+          </div>
+          <div class="text-xs md:text-sm font-black text-cyan-300" id="current-floor-label">目前觀看: 1 樓</div>
+        </div>
+        
+        <div class="street-scroll-container">
+          <div id="board" class="street-grid relative">
+            <!-- 蜿蜒街道格與中央畫面由 JavaScript 動態生成 -->
+          </div>
         </div>
       </div>
     </div>
@@ -171,10 +194,10 @@
           <span id="p0-money" class="text-2xl md:text-3xl font-black text-amber-300 tracking-wider">$15,000</span>
         </div>
 
-        <!-- 機械道具區 & 動作按鈕 -->
+        <!-- 科目積分區 & 動作按鈕 -->
         <div class="flex items-center gap-3 w-full md:w-auto justify-end flex-wrap">
-          <div class="flex items-center gap-2 flex-wrap" id="p0-physics-tools">
-            <span class="bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-sm font-bold">背包空無一物</span>
+          <div class="flex items-center gap-2 flex-wrap" id="p0-scores">
+            <span class="bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-sm font-bold">目前無積分</span>
           </div>
           <button id="p0-leverage-btn" onclick="openLeverageModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm md:text-base font-black py-2.5 px-4 rounded-xl transition-all shadow-lg flex items-center gap-1.5 active:scale-95 disabled:opacity-40">
             <i class="fa-solid fa-chart-line"></i> 槓桿融資
@@ -363,7 +386,7 @@
   <!-- 🌐 引入 PeerJS 免伺服器 P2P 直連套件 -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="assets/js/game-data.js"></script>
-  <script src="assets/js/physics-quizzes.js"></script>
+  <script src="assets/js/quiz-system.js"></script>
 
   <!-- 🎮 遊戲核心與 P2P 線上連線邏輯 -->
   <script>
@@ -375,6 +398,7 @@
     let isTopFlipped = false;
     let connectionTimeoutTimer = null;
     let isConnected = false;
+    let currentFloorView = 1;
 
     // Google 公用 STUN 伺服器設定，大幅提高 P2P NAT 穿透與行動網路連線成功率
     const peerConfig = {
@@ -521,7 +545,8 @@
       peerConn.on('data', (data) => {
         if (data.type === 'SYNC_STATE') {
           players = data.players;
-          boardTiles = data.boardTiles;
+          allFloorTiles = data.allFloorTiles;
+          boardTiles = allFloorTiles[currentFloorView];
           currentPlayerIndex = data.currentPlayerIndex;
           isConnected = true;
           updateUI();
@@ -544,7 +569,7 @@
         peerConn.send({
           type: 'SYNC_STATE',
           players: players,
-          boardTiles: boardTiles,
+          allFloorTiles: allFloorTiles,
           currentPlayerIndex: currentPlayerIndex
         });
       }
@@ -620,43 +645,48 @@
       if (!board) return;
       board.innerHTML = "";
 
-      boardTiles.forEach(tileData => {
-        const tileEl = document.createElement("div");
-        tileEl.id = `tile-${tileData.id}`;
-        tileEl.style.gridRowStart = tileData.pos[0] + 1;
-        tileEl.style.gridColumnStart = tileData.pos[1] + 1;
-        
-        let initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-2 border-slate-600 bg-slate-800/90 shadow-md transition-all min-h-0 min-w-0";
-        if (tileData.type === "start") initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-emerald-400 bg-emerald-950/90 shadow-lg shadow-emerald-950/50 transition-all min-h-0 min-w-0 text-emerald-300";
-        if (tileData.type === "physics") initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-amber-400 bg-amber-950/90 shadow-lg shadow-amber-950/50 transition-all min-h-0 min-w-0 text-amber-300";
-        if (tileData.type === "chance" || tileData.type === "fate") initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-indigo-400 bg-indigo-950/90 shadow-lg shadow-indigo-950/50 transition-all min-h-0 min-w-0 text-indigo-300";
-        if (tileData.type === "tax") initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-rose-400 bg-rose-950/90 shadow-lg shadow-rose-950/50 transition-all min-h-0 min-w-0 text-rose-300";
+      for (let f = 1; f <= 6; f++) {
+        allFloorTiles[f].forEach(tileData => {
+          const tileEl = document.createElement("div");
+          tileEl.id = `tile-${f}-${tileData.id}`;
+          tileEl.dataset.floor = f;
+          tileEl.style.gridRowStart = tileData.pos[0] + 1;
+          tileEl.style.gridColumnStart = tileData.pos[1] + 1;
+          
+          let initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-2 border-slate-600 bg-slate-800/90 shadow-md transition-all min-h-0 min-w-0";
+          if (tileData.type === "start") initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-emerald-400 bg-emerald-950/90 shadow-lg shadow-emerald-950/50 transition-all min-h-0 min-w-0 text-emerald-300";
+          if (tileData.type === "physics") initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-amber-400 bg-amber-950/90 shadow-lg shadow-amber-950/50 transition-all min-h-0 min-w-0 text-amber-300";
+          if (tileData.type === "chance" || tileData.type === "fate") initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-indigo-400 bg-indigo-950/90 shadow-lg shadow-indigo-950/50 transition-all min-h-0 min-w-0 text-indigo-300";
+          if (tileData.type === "tax") initialBaseStyle = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-rose-400 bg-rose-950/90 shadow-lg shadow-rose-950/50 transition-all min-h-0 min-w-0 text-rose-300";
 
-        tileEl.className = initialBaseStyle;
-        
-        let tileContent = `
-          <div class="flex items-start justify-between gap-1 w-full">
-            <span class="truncate text-sm sm:text-base font-black text-white leading-tight">${tileData.name}</span>
-            <span id="tile-badge-${tileData.id}" class="shrink-0"></span>
-          </div>
-        `;
-        
-        if (tileData.type === "property") {
-          tileContent += `
-            <div class="flex items-center justify-between my-auto w-full pt-1">
-              <span class="text-sm sm:text-base font-black text-amber-300" id="tile-price-${tileData.id}">$${tileData.price}</span>
-              <span class="flex gap-0.5 text-sm text-amber-400" id="tile-houses-${tileData.id}"></span>
+          if (f !== currentFloorView) initialBaseStyle += " hidden";
+
+          tileEl.className = initialBaseStyle;
+          
+          let tileContent = `
+            <div class="flex items-start justify-between gap-1 w-full">
+              <span class="truncate text-sm sm:text-base font-black text-white leading-tight">${tileData.name}</span>
+              <span id="tile-badge-${f}-${tileData.id}" class="shrink-0"></span>
             </div>
           `;
-        } else if (tileData.icon) {
-          tileContent += `<div class="text-2xl sm:text-3xl my-auto text-center opacity-90"><i class="fa-solid ${tileData.icon}"></i></div>`;
-        }
+          
+          if (tileData.type === "property") {
+            tileContent += `
+              <div class="flex items-center justify-between my-auto w-full pt-1">
+                <span class="text-sm sm:text-base font-black text-amber-300" id="tile-price-${f}-${tileData.id}">$${tileData.price}</span>
+                <span class="flex gap-0.5 text-sm text-amber-400" id="tile-houses-${f}-${tileData.id}"></span>
+              </div>
+            `;
+          } else if (tileData.icon) {
+            tileContent += `<div class="text-2xl sm:text-3xl my-auto text-center opacity-90"><i class="fa-solid ${tileData.icon}"></i></div>`;
+          }
 
-        tileContent += `<div id="piece-container-${tileData.id}" class="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1 z-10"></div>`;
+          tileContent += `<div id="piece-container-${f}-${tileData.id}" class="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1 z-10"></div>`;
 
-        tileEl.innerHTML = tileContent;
-        board.appendChild(tileEl);
-      });
+          tileEl.innerHTML = tileContent;
+          board.appendChild(tileEl);
+        });
+      }
 
       const centerArea = document.createElement("div");
       centerArea.style.gridRow = "2 / 4";
@@ -700,14 +730,17 @@
     }
 
     function renderPlayers() {
-      boardTiles.forEach(t => {
-        const container = document.getElementById(`piece-container-${t.id}`);
-        if (container) container.innerHTML = "";
-      });
+      for (let f = 1; f <= 6; f++) {
+        allFloorTiles[f].forEach(t => {
+          const container = document.getElementById(`piece-container-${f}-${t.id}`);
+          if (container) container.innerHTML = "";
+        });
+      }
 
       players.forEach(p => {
         if (p.bankrupted) return;
-        const container = document.getElementById(`piece-container-${p.position}`);
+        if (p.floor !== currentFloorView) return; // Only render if looking at their floor
+        const container = document.getElementById(`piece-container-${p.floor}-${p.position}`);
         if (container) {
           const piece = document.createElement("div");
           piece.className = `w-7 h-7 sm:w-9 sm:h-9 ${p.color} rounded-full border-2 border-white flex items-center justify-center text-xs sm:text-base shadow-2xl animate-bounce overflow-hidden`;
@@ -715,6 +748,30 @@
           container.appendChild(piece);
         }
       });
+    }
+
+    function switchFloorView(floor) {
+      if (floor < 1 || floor > 6) return;
+      currentFloorView = floor;
+      boardTiles = allFloorTiles[floor];
+      
+      const label = document.getElementById("current-floor-label");
+      if (label) label.innerText = `目前觀看: ${floor} 樓`;
+
+      for (let f = 1; f <= 6; f++) {
+        allFloorTiles[f].forEach(t => {
+          const tileEl = document.getElementById(`tile-${f}-${t.id}`);
+          if (tileEl) {
+            if (f === floor) {
+              tileEl.classList.remove("hidden");
+            } else {
+              tileEl.classList.add("hidden");
+            }
+          }
+        });
+      }
+      renderPlayers();
+      updateUI();
     }
 
     function updateUI() {
@@ -738,14 +795,14 @@
       document.getElementById("p0-identity-badge").classList.toggle("hidden", !(isOnlineMode && myPlayerIndex === 0));
       document.getElementById("p1-identity-badge").classList.toggle("hidden", !(isOnlineMode && myPlayerIndex === 1));
 
-      // 3. 更新棋盤格
-      boardTiles.forEach(tile => {
-        const tileEl = document.getElementById(`tile-${tile.id}`);
+      // 3. 更新當前樓層的棋盤格
+      allFloorTiles[currentFloorView].forEach(tile => {
+        const tileEl = document.getElementById(`tile-${currentFloorView}-${tile.id}`);
         if (!tileEl) return;
 
         if (tile.type === "property") {
-          const badgeEl = document.getElementById(`tile-badge-${tile.id}`);
-          const houseEl = document.getElementById(`tile-houses-${tile.id}`);
+          const badgeEl = document.getElementById(`tile-badge-${currentFloorView}-${tile.id}`);
+          const houseEl = document.getElementById(`tile-houses-${currentFloorView}-${tile.id}`);
 
           if (tile.owner === 0) {
             tileEl.className = "road-tile relative flex flex-col justify-between p-2.5 rounded-2xl border-4 border-red-500 bg-red-950/90 shadow-md transition-all min-h-0 min-w-0";
@@ -773,7 +830,6 @@
         }
       });
 
-      // 4. 更新玩家卡片與動作按鈕權限
       players.forEach((p, idx) => {
         const avatarImgBox = document.getElementById(`p${idx}-avatar-img`);
         if (avatarImgBox) {
@@ -787,7 +843,32 @@
         const moneyEl = document.getElementById(`p${idx}-money`);
         if (moneyEl) moneyEl.innerText = `$${p.money.toLocaleString()}`;
         
-        const ownedLands = boardTiles.filter(t => t.owner === p.id).map(t => t.name);
+        const scoresContainer = document.getElementById(`p${idx}-scores`);
+        if (scoresContainer) {
+          scoresContainer.innerHTML = "";
+          const scoreConfigs = [
+            { key: 'math', name: '數學', color: 'bg-amber-600' },
+            { key: 'english', name: '英文', color: 'bg-blue-600' },
+            { key: 'science', name: '自然', color: 'bg-emerald-600' },
+            { key: 'chinese', name: '國文', color: 'bg-rose-600' }
+          ];
+          let hasScores = false;
+          scoreConfigs.forEach(item => {
+            const score = p.scores[item.key] || 0;
+            if (score > 0) {
+              hasScores = true;
+              const badge = document.createElement("span");
+              badge.className = `${item.color} text-white font-black px-2 py-1 rounded-lg text-xs shadow-md whitespace-nowrap`;
+              badge.innerText = `${item.name}: ${score}`;
+              scoresContainer.appendChild(badge);
+            }
+          });
+          if (!hasScores) {
+            scoresContainer.innerHTML = '<span class="bg-slate-700 text-slate-400 px-3 py-1.5 rounded-xl text-sm font-bold">目前無積分</span>';
+          }
+        }
+        
+        const ownedLands = allFloorTiles[p.floor].filter(t => t.owner === p.id).map(t => t.name);
         const landsEl = document.getElementById(`p${idx}-lands`);
         if (landsEl) landsEl.innerText = ownedLands.length > 0 ? ownedLands.join(", ") : "無";
 
@@ -899,10 +980,12 @@
     function movePlayerRelative(p, steps) {
       let stepsLeft = steps;
       const moveInterval = setInterval(() => {
-        p.position = (p.position + 1) % boardTiles.length;
+        const pFloorTiles = allFloorTiles[p.floor];
+        p.position = (p.position + 1) % pFloorTiles.length;
         if (p.position === 0) {
           p.money += 2000;
           addLog(`🚩 ${p.name} 經過起點，獲得獎勵金 $2,000！`, "text-emerald-300 font-black");
+          checkFloorPromotion(p);
         }
         renderPlayers();
         stepsLeft--;
@@ -913,83 +996,107 @@
       }, 200);
     }
 
-    function handleTileLanding(p) {
-      const tile = boardTiles[p.position];
-      addLog(`📍 ${p.name} 停留在【${tile.name}】`, "text-white font-bold");
+    function checkFloorPromotion(p) {
+      if (p.floor >= 6) return;
+      const rule = floorRules.find(r => r.floor === p.floor + 1);
+      if (!rule) return;
+      const s = p.scores || {};
+      const math = s.math || 0;
+      const english = s.english || 0;
+      const science = s.science || 0;
+      const chinese = s.chinese || 0;
+      
+      if (math >= rule.math && english >= rule.english && science >= rule.science && chinese >= rule.chinese) {
+        p.floor += 1;
+        p.position = 0;
+        addLog(`🎉 恭喜！${p.name} 積分達標，晉升至 ${p.floor} 樓！`, "text-fuchsia-400 font-black text-lg");
+        if (myPlayerIndex === p.id || !isOnlineMode) {
+          switchFloorView(p.floor);
+        }
+      } else {
+        addLog(`⚠️ ${p.name} 積分不足以升級至 ${p.floor + 1} 樓。(需: 數${rule.math},英${rule.english},自${rule.science},國${rule.chinese})`, "text-slate-400 font-bold text-xs");
+      }
+    }
 
-      if (tile.type === "physics") {
-        triggerPhysicsQuiz(p, tile.machineType);
-      } else if (tile.type === "property") {
-        if (tile.owner === null) {
-          let actualPrice = tile.price;
-          if (p.activeBuffs.lever) {
-            actualPrice = Math.floor(tile.price * 0.7);
-            addLog(`⚖️ 槓桿作用折抵！地產價格享 7 折優惠（原價 $${tile.price} 變為 $${actualPrice}）`, "text-amber-300 font-bold");
-          }
-          showPropertyPurchaseModal(p, tile, actualPrice);
-        } else if (tile.owner === p.id) {
-          if (tile.houses < 3) {
-            let houseCost = tile.housePrice;
+    function handleTileLanding(p) {
+      const tile = allFloorTiles[p.floor][p.position];
+      addLog(`📍 ${p.name} 停留在【${tile.name}】(${p.floor}F)`, "text-white font-bold");
+
+      triggerPhysicsQuiz(p, () => {
+        if (tile.type === "physics") {
+          finishTurn();
+        } else if (tile.type === "property") {
+          if (tile.owner === null) {
+            let actualPrice = tile.price;
             if (p.activeBuffs.lever) {
-              houseCost = Math.floor(tile.housePrice * 0.7);
+              actualPrice = Math.floor(tile.price * 0.7);
+              addLog(`⚖️ 槓桿作用折抵！地產價格享 7 折優惠（原價 $${tile.price} 變為 $${actualPrice}）`, "text-amber-300 font-bold");
             }
-            showModal(
-              "fa-house-chimney text-amber-400",
-              `加蓋房屋 (${tile.name})`,
-              `是否花費 <b class="text-amber-300">$${houseCost}</b> 在此加蓋房屋？（現有 ${tile.houses} 棟）`,
-              true,
-              () => {
-                if (p.money >= houseCost) {
-                  p.money -= houseCost;
-                  if (p.activeBuffs.lever) p.activeBuffs.lever = false;
-                  tile.houses++;
-                  addLog(`🏡 ${p.name} 花費 $${houseCost} 在 ${tile.name} 加蓋了 1 棟房屋！`, "text-emerald-300 font-bold");
-                } else {
-                  addLog(`${p.name} 現金不足，無法加蓋房屋。`, "text-rose-400 font-bold");
-                }
-                finishTurn();
-              },
-              finishTurn
-            );
+            showPropertyPurchaseModal(p, tile, actualPrice);
+          } else if (tile.owner === p.id) {
+            if (tile.houses < 3) {
+              let houseCost = tile.housePrice;
+              if (p.activeBuffs.lever) {
+                houseCost = Math.floor(tile.housePrice * 0.7);
+              }
+              showModal(
+                "fa-house-chimney text-amber-400",
+                `加蓋房屋 (${tile.name})`,
+                `是否花費 <b class="text-amber-300">$${houseCost}</b> 在此加蓋房屋？（現有 ${tile.houses} 棟）`,
+                true,
+                () => {
+                  if (p.money >= houseCost) {
+                    p.money -= houseCost;
+                    if (p.activeBuffs.lever) p.activeBuffs.lever = false;
+                    tile.houses++;
+                    addLog(`🏡 ${p.name} 花費 $${houseCost} 在 ${tile.name} 加蓋了 1 棟房屋！`, "text-emerald-300 font-bold");
+                  } else {
+                    addLog(`${p.name} 現金不足，無法加蓋房屋。`, "text-rose-400 font-bold");
+                  }
+                  finishTurn();
+                },
+                finishTurn
+              );
+            } else {
+              addLog(`${tile.name} 已達最高房屋等級（3 棟）。`, "text-slate-400 font-bold");
+              finishTurn();
+            }
           } else {
-            addLog(`${tile.name} 已達最高房屋等級（3 棟）。`, "text-slate-400 font-bold");
+            const owner = players[tile.owner];
+            let rent = tile.rent * (1 + tile.houses * 0.8);
+            if (p.activeBuffs.pulley) {
+              rent = Math.floor(rent * 0.5);
+              p.activeBuffs.pulley = false;
+              addLog(`🛞 動滑輪省力生效！過路費獲得 5 折減免！`, "text-blue-300 font-black");
+            }
+            rent = Math.floor(rent);
+            p.money -= rent;
+            owner.money += rent;
+            addLog(`💸 ${p.name} 踩到 ${owner.name} 的地產，支付過路費 $${rent.toLocaleString()}！`, "text-rose-300 font-black");
+            checkBankruptcy(p);
             finishTurn();
           }
-        } else {
-          const owner = players[tile.owner];
-          let rent = tile.rent * (1 + tile.houses * 0.8);
-          if (p.activeBuffs.pulley) {
-            rent = Math.floor(rent * 0.5);
-            p.activeBuffs.pulley = false;
-            addLog(`🛞 動滑輪省力生效！過路費獲得 5 折減免！`, "text-blue-300 font-black");
-          }
-          rent = Math.floor(rent);
-          p.money -= rent;
-          owner.money += rent;
-          addLog(`💸 ${p.name} 踩到 ${owner.name} 的地產，支付過路費 $${rent.toLocaleString()}！`, "text-rose-300 font-black");
+        } else if (tile.type === "chance") {
+          const card = chanceCards[Math.floor(Math.random() * chanceCards.length)];
+          showModal("fa-shuffle text-purple-400", `🎲 機會：${card.title}`, card.desc, false, () => {
+            card.action(p);
+            finishTurn();
+          });
+        } else if (tile.type === "fate") {
+          const card = fateCards[Math.floor(Math.random() * fateCards.length)];
+          showModal("fa-question text-purple-400", `🔮 命運：${card.title}`, card.desc, false, () => {
+            card.action(p);
+            finishTurn();
+          });
+        } else if (tile.type === "tax") {
+          p.money -= 1000;
+          addLog(`💸 ${p.name} 繳納實驗稅金 $1,000`, "text-rose-400 font-bold");
           checkBankruptcy(p);
           finishTurn();
+        } else {
+          finishTurn();
         }
-      } else if (tile.type === "chance") {
-        const card = chanceCards[Math.floor(Math.random() * chanceCards.length)];
-        showModal("fa-shuffle text-purple-400", `🎲 機會：${card.title}`, card.desc, false, () => {
-          card.action(p);
-          finishTurn();
-        });
-      } else if (tile.type === "fate") {
-        const card = fateCards[Math.floor(Math.random() * fateCards.length)];
-        showModal("fa-question text-purple-400", `🔮 命運：${card.title}`, card.desc, false, () => {
-          card.action(p);
-          finishTurn();
-        });
-      } else if (tile.type === "tax") {
-        p.money -= 1000;
-        addLog(`💸 ${p.name} 繳納物理實驗稅金 $1,000`, "text-rose-400 font-bold");
-        checkBankruptcy(p);
-        finishTurn();
-      } else {
-        finishTurn();
-      }
+      });
     }
 
     function usePhysicsItem(itemKey) {
@@ -1017,7 +1124,7 @@
           break;
 
         case "pulley":
-          const myLands = boardTiles.filter(t => t.owner === p.id && t.houses < 3);
+          const myLands = allFloorTiles[p.floor].filter(t => t.owner === p.id && t.houses < 3);
           if (myLands.length > 0) {
             const landBtns = myLands.map(t => `
               <button onclick="executePulleyAddHouse(${t.id})" class="bg-blue-600 hover:bg-blue-500 text-white font-black py-2.5 px-4 rounded-xl text-sm sm:text-base border-2 border-blue-400 shadow-lg active:scale-95">
@@ -1179,19 +1286,19 @@
       );
     };
 
-    function triggerPhysicsQuiz(p, machineType) {
-      if (!physicsQuizzes || physicsQuizzes.length === 0) {
+    function triggerPhysicsQuiz(p, onComplete) {
+      if (typeof questionsDB === 'undefined' || questionsDB.length === 0) {
         showModal(
           "fa-triangle-exclamation text-amber-400",
           "題庫尚未載入",
-          "物理題庫還在載入中，請稍後再試。此回合先跳過題目。",
+          "題庫還在載入中，請稍後再試。此回合先跳過題目。",
           false,
-          finishTurn
+          onComplete || finishTurn
         );
         return;
       }
 
-      const quiz = physicsQuizzes.find(q => q.machine === machineType) || physicsQuizzes[0];
+      const quiz = questionsDB[Math.floor(Math.random() * questionsDB.length)];
       const isMyTurn = (!isOnlineMode) || (myPlayerIndex === currentPlayerIndex);
 
       ["p1", "p2"].forEach(target => {
@@ -1230,16 +1337,17 @@
                     false,
                     () => {
                       quiz.reward(p);
-                      finishTurn();
+                      if (onComplete) onComplete();
+                      else finishTurn();
                     }
                   );
                 } else {
                   showModal(
                     "fa-circle-xmark text-rose-400",
                     "❌ 答錯囉！",
-                    "沒關係！再接再勵！機械原理：當施力臂大於抗力臂時才能省力！",
+                    `沒關係！再接再勵！<br><br><span class="text-emerald-300 font-bold">${quiz.explanation}</span>`,
                     false,
-                    finishTurn
+                    onComplete || finishTurn
                   );
                 }
               };
