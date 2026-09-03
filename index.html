@@ -552,7 +552,7 @@
           updateUI();
           renderPlayers();
         } else if (data.type === 'LOG') {
-          addLog(data.msg, data.colorClass);
+          addLog(data.msg, data.colorClass, true);
         }
       });
 
@@ -681,6 +681,37 @@
             tileContent += `<div class="text-2xl sm:text-3xl my-auto text-center opacity-90"><i class="fa-solid ${tileData.icon}"></i></div>`;
           }
 
+          let directionHTML = "";
+          const tiles = allFloorTiles[f];
+          const currentIndex = tiles.findIndex(t => t.id === tileData.id);
+          if (currentIndex !== -1 && currentIndex < tiles.length - 1) {
+            const nextTile = tiles[currentIndex + 1];
+            const dy = nextTile.pos[0] - tileData.pos[0];
+            const dx = nextTile.pos[1] - tileData.pos[1];
+            
+            let arrowClass = "";
+            let arrowIcon = "fa-chevron-right";
+            
+            if (dx > 0 && dy === 0) {
+              arrowClass = "-right-5 top-1/2 -translate-y-1/2";
+              arrowIcon = dx > 1 ? "fa-angles-right text-amber-500/80 drop-shadow-lg scale-150 z-20" : "fa-chevron-right";
+            } else if (dx < 0 && dy === 0) {
+              arrowClass = "-left-5 top-1/2 -translate-y-1/2";
+              arrowIcon = dx < -1 ? "fa-angles-left text-amber-500/80 drop-shadow-lg scale-150 z-20" : "fa-chevron-left";
+            } else if (dy > 0 && dx === 0) {
+              arrowClass = "-bottom-5 left-1/2 -translate-x-1/2";
+              arrowIcon = dy > 1 ? "fa-angles-down text-amber-500/80 drop-shadow-lg scale-150 z-20" : "fa-chevron-down";
+            } else if (dy < 0 && dx === 0) {
+              arrowClass = "-top-5 left-1/2 -translate-x-1/2";
+              arrowIcon = dy < -1 ? "fa-angles-up text-amber-500/80 drop-shadow-lg scale-150 z-20" : "fa-chevron-up";
+            }
+
+            if (arrowClass) {
+              directionHTML = `<div class="absolute ${arrowClass} text-slate-500/90 text-lg z-0 pointer-events-none drop-shadow-sm"><i class="fa-solid ${arrowIcon}"></i></div>`;
+            }
+          }
+
+          tileContent += directionHTML;
           tileContent += `<div id="piece-container-${f}-${tileData.id}" class="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1 z-10"></div>`;
 
           tileEl.innerHTML = tileContent;
@@ -693,7 +724,7 @@
       centerArea.style.gridColumn = "2 / 6";
       centerArea.className = "bg-slate-950/95 rounded-2xl flex flex-col p-3 border-4 border-slate-700 shadow-2xl justify-between overflow-hidden relative z-0 h-full min-h-0 min-w-0 gap-2";
       centerArea.innerHTML = `
-        <div class="border-b-2 border-slate-800 pb-1 flex-1 flex flex-col overflow-hidden min-h-0">
+        <div id="log-container-p2" class="border-b-2 border-slate-800 pb-1 flex-1 flex flex-col overflow-hidden min-h-0">
           <div class="flex items-center justify-between text-xs sm:text-sm font-black text-blue-400 mb-1">
             <span><i class="fa-solid fa-user-astronaut"></i> P2 (藍) 視角動態</span>
             <span id="turn-indicator-p2" class="text-amber-300">輪到 玩家 1</span>
@@ -711,7 +742,7 @@
           </div>
         </div>
 
-        <div class="border-t-2 border-slate-800 pt-1 flex-1 flex flex-col overflow-hidden min-h-0">
+        <div id="log-container-p1" class="border-t-2 border-slate-800 pt-1 flex-1 flex flex-col overflow-hidden min-h-0">
           <div class="flex items-center justify-between text-xs sm:text-sm font-black text-red-400 mb-1">
             <span><i class="fa-solid fa-user-ninja"></i> P1 (紅) 視角動態</span>
             <span id="turn-indicator-p1" class="text-amber-300">輪到 玩家 1</span>
@@ -921,37 +952,53 @@
         const leverageBtn = document.getElementById(`p${idx}-leverage-btn`);
         
         if (card && rollBtn) {
-          if (isCurrentPlayersTurn) {
+          const isActive = isOnlineMode || isCurrentPlayersTurn;
+          if (isActive) {
             card.classList.add("border-amber-400", "ring-4", "ring-amber-400/50");
             card.classList.remove("border-slate-700");
-            
-            const isMyTurnToAct = canControlThisPlayer && !isRolling;
-            rollBtn.disabled = !isMyTurnToAct;
-            if (leverageBtn) leverageBtn.disabled = !isMyTurnToAct;
           } else {
             card.classList.remove("border-amber-400", "ring-4", "ring-amber-400/50");
             card.classList.add("border-slate-700");
-            rollBtn.disabled = true;
-            if (leverageBtn) leverageBtn.disabled = true;
           }
+          
+          const isMyTurnToAct = canControlThisPlayer && (isOnlineMode || isCurrentPlayersTurn) && !isRolling;
+          rollBtn.disabled = !isMyTurnToAct;
+          if (leverageBtn) leverageBtn.disabled = !isMyTurnToAct;
         }
       });
 
       const currentP = players[currentPlayerIndex];
       const isMyTurn = (!isOnlineMode) || (myPlayerIndex === currentPlayerIndex);
-      const turnMsg = `<i class="fa-solid fa-circle-play"></i> 輪到 ${currentP.name} ${isMyTurn ? '<span class="text-emerald-400">(你的回合)</span>' : ''}`;
+      let turnMsg = `<i class="fa-solid fa-circle-play"></i> 輪到 ${currentP.name} ${isMyTurn ? '<span class="text-emerald-400">(你的回合)</span>' : ''}`;
+      
+      if (isOnlineMode) {
+        turnMsg = `<i class="fa-solid fa-bolt text-amber-300"></i> 同步模式 <span class="text-emerald-400">(可隨時擲骰)</span>`;
+      }
       
       const indP1 = document.getElementById("turn-indicator-p1");
       const indP2 = document.getElementById("turn-indicator-p2");
       if (indP1) indP1.innerHTML = turnMsg;
       if (indP2) indP2.innerHTML = turnMsg;
+      
+      if (isOnlineMode) {
+        const containerP1 = document.getElementById("log-container-p1");
+        const containerP2 = document.getElementById("log-container-p2");
+        if (myPlayerIndex === 0) {
+          if (containerP2) containerP2.classList.add("hidden");
+          if (containerP1) { containerP1.classList.remove("border-t-2"); containerP1.classList.add("border-none"); }
+        } else {
+          if (containerP1) containerP1.classList.add("hidden");
+          if (containerP2) { containerP2.classList.remove("border-b-2"); containerP2.classList.add("border-none"); }
+        }
+      }
     }
 
     window.rollDice = function() {
       if (isRolling) return;
-      if (isOnlineMode && myPlayerIndex !== currentPlayerIndex) return;
-
-      const p = players[currentPlayerIndex];
+      
+      const rollerIndex = isOnlineMode ? myPlayerIndex : currentPlayerIndex;
+      const p = players[rollerIndex];
+      
       if (p.bankrupted) return;
 
       isRolling = true;
@@ -1480,7 +1527,7 @@
       modal.classList.remove("hidden");
     }
 
-    function addLog(msg, colorClass = "text-slate-300") {
+    function addLog(msg, colorClass = "text-slate-300", fromRemote = false) {
       ["game-log-p1", "game-log-p2"].forEach(logId => {
         const logBox = document.getElementById(logId);
         if (!logBox) return;
@@ -1492,7 +1539,7 @@
       });
 
       // 同步 Log 訊息給遠端
-      if (isOnlineMode && peerConn && peerConn.open && myPlayerIndex === currentPlayerIndex) {
+      if (isOnlineMode && peerConn && peerConn.open && !fromRemote) {
         peerConn.send({
           type: 'LOG',
           msg: msg,
@@ -1501,20 +1548,23 @@
       }
     }
 
-    function finishTurn() {
-      const p = players[currentPlayerIndex];
+    function finishTurn(pIndex) {
+      const actualIndex = (pIndex !== undefined) ? pIndex : (isOnlineMode ? myPlayerIndex : currentPlayerIndex);
+      const p = players[actualIndex];
 
       if (p.loan > 0 && !p.bankrupted) {
         const interest = Math.max(100, Math.floor(p.loan * 0.05));
         p.money -= interest;
-        addLog(`💸 ${p.name} 支付了貸款利息 $${interest}。`, "text-rose-300 font-bold");
+        addLog(`💸 ${p.name} 支付了貸款利息 $${interest}。`, "text-rose-300 font-bold", isOnlineMode && actualIndex !== myPlayerIndex);
         checkBankruptcy(p);
       }
 
       isRolling = false;
 
-      if (!players.some(player => player.bankrupted)) {
-        currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+      if (!isOnlineMode) {
+        if (!players.some(player => player.bankrupted)) {
+          currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+        }
       }
 
       syncGameStateToPeer();
