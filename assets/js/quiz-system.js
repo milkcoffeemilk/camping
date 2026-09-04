@@ -9,59 +9,6 @@ const quizRewardConfig = {
   incline: { label: "斜面", colorClass: "text-cyan-300 font-black" }
 };
 
-const fallbackQuizRows = [
-  {
-    title: "槓桿原理挑戰",
-    question: "想用比較小的力抬起重物，施力點通常應該放在哪裡？",
-    optionA: "離支點遠一點",
-    optionB: "離支點近一點",
-    optionC: "直接放在支點上",
-    optionD: "",
-    answer: "A",
-    explanation: "答對了！施力臂越長，越容易產生足夠力矩。"
-  },
-  {
-    title: "滑輪省力挑戰",
-    question: "動滑輪最主要的效果是什麼？",
-    optionA: "改變物體顏色",
-    optionB: "省力但拉繩距離較長",
-    optionC: "讓重力消失",
-    optionD: "",
-    answer: "B",
-    explanation: "答對了！動滑輪能分擔重量，所以比較省力。"
-  },
-  {
-    title: "輪軸傳動挑戰",
-    question: "輪軸能讓工作變輕鬆，關鍵原因比較接近哪一個？",
-    optionA: "利用較大的輪半徑增加力矩",
-    optionB: "讓物體變輕",
-    optionC: "讓時間停止",
-    optionD: "",
-    answer: "A",
-    explanation: "答對了！輪越大，同樣的力可以產生更大的轉動效果。"
-  },
-  {
-    title: "齒輪咬合挑戰",
-    question: "兩個互相咬合的齒輪，轉動方向會如何？",
-    optionA: "方向相同",
-    optionB: "方向相反",
-    optionC: "完全不會轉",
-    optionD: "",
-    answer: "B",
-    explanation: "答對了！相鄰齒輪會朝相反方向旋轉。"
-  },
-  {
-    title: "斜面省力挑戰",
-    question: "斜面為什麼能省力？",
-    optionA: "把重物推上較長距離，降低需要的力",
-    optionB: "讓重量直接歸零",
-    optionC: "只靠運氣",
-    optionD: "",
-    answer: "A",
-    explanation: "答對了！斜面用較長路徑換取較小施力。"
-  }
-];
-
 function parseCsv(text) {
   const rows = [];
   let row = [];
@@ -151,27 +98,21 @@ function buildQuizzes(rows) {
     .map(rowToQuiz);
 }
 
-const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1YQi8FbgIaYKWxvb4MQWRSLVYctMKUj8rHY0BSudUwXw/export?format=csv";
+
 
 async function loadQuestions() {
   try {
-    // 檢查是否有引入 questions.js 中的 questionsData
+    // 嚴格檢查是否有引入 question.js 中的 questionsData
     if (typeof questionsData !== 'undefined' && Array.isArray(questionsData) && questionsData.length > 0) {
       const loadedQuizzes = buildQuizzes(questionsData);
-      questionsDB = loadedQuizzes.length > 0 ? loadedQuizzes : buildQuizzes(fallbackQuizRows);
-      console.log("✅ 成功從 questions.js 載入題庫");
+      questionsDB = loadedQuizzes;
+      console.log("✅ 成功從 assets/data/question.js 載入題庫");
     } else {
-      // 否則嘗試從 Google Sheet 載入
-      const response = await fetch(GOOGLE_SHEET_URL, { cache: "no-store" });
-      if (!response.ok) throw new Error(`CSV load failed: ${response.status}`);
-      const csvText = await response.text();
-      const loadedQuizzes = buildQuizzes(csvTextToObjects(csvText));
-      questionsDB = loadedQuizzes.length > 0 ? loadedQuizzes : buildQuizzes(fallbackQuizRows);
-      console.log("✅ 成功從 Google Sheet 載入題庫");
+      throw new Error("找不到 questionsData。請確認 assets/data/question.js 是否存在且格式正確。");
     }
   } catch (err) {
-    console.warn("⚠️ 無法載入外部題庫，將使用內建預設題庫。", err);
-    questionsDB = buildQuizzes(fallbackQuizRows);
+    console.error("⚠️ 載入題庫失敗：", err);
+    questionsDB = []; // 載入失敗則清空
   }
   
   // Extract unique titles for weight configuration

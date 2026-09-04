@@ -92,8 +92,8 @@
         <ol>
             <li>準備您的 CSV 檔案（第一列必須是標題，例如：id, question, optionA, optionB, answer 等）。</li>
             <li>選擇檔案後，系統會自動將其轉換為 JavaScript 陣列格式。</li>
-            <li>您可以直接複製程式碼，或是點擊下載將其儲存為 <code>questions.js</code>。</li>
-            <li>將下載的 <code>questions.js</code> 引入到您的 HTML 中即可使用。</li>
+            <li>您可以直接複製程式碼，或是點擊下載將其儲存為 <code>question.js</code>。</li>
+            <li>將下載的 <code>question.js</code> 放到 <code>assets/data/</code> 資料夾中。</li>
         </ol>
     </div>
 
@@ -109,7 +109,7 @@
 
     <div class="btn-group">
         <button id="copyBtn" class="secondary">複製程式碼</button>
-        <button id="downloadBtn">下載 questions.js</button>
+        <button id="downloadBtn">下載 question.js</button>
     </div>
 </div>
 
@@ -246,7 +246,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'questions.js';
+        a.download = 'question.js';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
