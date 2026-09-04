@@ -108,6 +108,116 @@
 
         // 取得場次資料
         API.loadSessions();
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>露營報名表單</title>
+  <!--<link rel="stylesheet" href="assets/css/style.css">-->
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <!-- 載入 config.js 與 api.js -->
+
+ <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 500px;
+      margin: auto;
+      background-color: #f9f9f9;
+    }
+    h2 { text-align: center; color: #333; }
+    label { font-weight: bold; display: block; margin-bottom: 5px; }
+    .hint { font-size: 12px; color: #555; margin-top: -8px; margin-bottom: 10px; }
+    input, select, textarea {
+      display: block;
+      margin-bottom: 15px;
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 16px;
+    }
+    button:hover { background-color: #45a049; }
+    #userName { margin-bottom: 20px; font-weight: bold; color: green; text-align: center; }
+  </style>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/api.js"></script>
+  <!-- 🌐 引入 PeerJS 免伺服器 P2P 直連套件 -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="assets/data/floor-rules.js"></script>
+  <!-- 如果有使用轉換後的題庫，請確保 question.js 放在 assets/data/ 目錄下 -->
+  <script src="assets/data/question.js"></script>
+  <script src="assets/js/game-data.js"></script>
+  <script src="assets/js/quiz-system.js"></script>
+
+</head>
+<body>
+
+  <h2>🏕️ 露營報名表單 V1.07</h2>
+  <div id="userName">🔄 載入中...</div>
+
+  <form id="eventForm">
+    <input type="text" name="name" id="name" placeholder="姓名" required readonly>
+
+    <label for="eventName">露營場次名稱</label>
+    <select name="eventName" id="eventName" required>
+      <option value="">載入中...</option>
+    </select>
+
+    <label for="adultCount">大人人數</label>
+    <input type="number" name="adultCount" id="adultCount" min="0" value="0" required>
+
+    <label for="halfPriceChildCount">半價小孩人數</label>
+    <input type="number" name="halfPriceChildCount" id="halfPriceChildCount" min="0" value="0" required>
+    <div class="hint">小一以上到高中，沒有則填 0</div>
+
+    <label for="youngChildCount">幼稚園以下小孩人數</label>
+    <input type="number" name="youngChildCount" id="youngChildCount" min="0" value="0" required>
+    <div class="hint">沒有則填 0</div>
+
+    <label for="nightAttack">是否夜衝</label>
+    <select name="nightAttack" id="nightAttack" required>
+      <option value="">請選擇</option>
+      <option value="是">是</option>
+      <option value="否">否</option>
+    </select>
+
+    <textarea name="note" id="note" placeholder="備註 (選填)"></textarea>
+
+    <button type="submit">送出報名</button>
+  </form>
+
+  <script>
+    /** 1. 初始化 LIFF **/
+    async function main() {
+      await liff.init({ liffId: CONFIG.LIFF_ID });
+
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
+
+      try {
+        const profile = await liff.getProfile();
+        document.getElementById("userName").textContent = `👤 目前登入者：${profile.displayName}`;
+        document.getElementById("name").value = profile.displayName;
+        document.getElementById("eventForm").dataset.userId = profile.userId;
+
+        // 取得場次資料
+        API.loadSessions();
       } catch (err) {
         document.getElementById("userName").textContent = "⚠️ 無法取得使用者資訊";
         console.error(err);

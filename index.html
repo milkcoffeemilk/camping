@@ -613,13 +613,27 @@
         }
       }
       
-      // Load titles from parsed DB
-      const titles = window.uniqueQuizTitles && window.uniqueQuizTitles.length > 0 
-                     ? window.uniqueQuizTitles 
-                     : ["槓桿原理", "滑輪", "輪軸", "齒輪", "斜面"];
+      // 檢查題庫是否成功載入
+      const isQuestionsLoaded = window.uniqueQuizTitles && window.uniqueQuizTitles.length > 0;
       
       if (weightsContainer) {
-        weightsContainer.innerHTML = "";
+        weightsContainer.innerHTML = ""; // 清除「載入中...」文字
+        
+        if (!isQuestionsLoaded) {
+          // 如果沒有讀到題庫，顯示明顯的錯誤訊息
+          weightsContainer.innerHTML = `
+            <div class="bg-rose-900/50 border border-rose-500 rounded-xl p-3 text-center">
+              <i class="fa-solid fa-triangle-exclamation text-rose-400 text-2xl mb-2"></i>
+              <div class="text-rose-300 font-bold text-sm">題庫載入失敗！</div>
+              <div class="text-rose-200 text-xs mt-1">請確定 <code class="bg-rose-950 px-1 rounded text-amber-300">assets/data/question.js</code> 檔案存在且格式正確。</div>
+            </div>
+          `;
+          return; // 中斷產生權重滑桿
+        }
+
+        // 載入成功，顯示權重滑桿
+        const titles = window.uniqueQuizTitles;
+        
         titles.forEach(title => {
           const defaultWeight = 100 / titles.length;
           const currentWeight = (quizWeights && typeof quizWeights[title] !== 'undefined') ? quizWeights[title] : defaultWeight;
@@ -631,7 +645,7 @@
           const row = document.createElement("div");
           row.className = "flex items-center justify-between gap-2";
           row.innerHTML = `
-            <span class="text-sm font-bold text-slate-300 w-1/3 truncate" title="${title}">${title}</span>
+            <span class="text-sm font-bold text-emerald-300 w-1/3 truncate" title="${title}"><i class="fa-solid fa-check text-emerald-500 mr-1"></i>${title}</span>
             <input type="range" min="0" max="100" value="${currentWeight}" class="flex-1 accent-amber-500" onchange="window.updateQuizWeight('${title}', this.value)">
             <span class="text-sm font-black text-amber-400 w-8 text-right" id="weight-val-${title}">${Math.round(currentWeight)}%</span>
           `;
