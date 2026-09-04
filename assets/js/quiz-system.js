@@ -155,21 +155,33 @@ const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1YQi8FbgIaYKWxv
 
 async function loadQuestions() {
   try {
-    const response = await fetch(GOOGLE_SHEET_URL, { cache: "no-store" });
-    if (!response.ok) throw new Error(`CSV load failed: ${response.status}`);
-    const csvText = await response.text();
-    const loadedQuizzes = buildQuizzes(csvTextToObjects(csvText));
-    questionsDB = loadedQuizzes.length > 0 ? loadedQuizzes : buildQuizzes(fallbackQuizRows);
+    // 檢查是否有引入 questions.js 中的 questionsData
+    if (typeof questionsData !== 'undefined' && Array.isArray(questionsData) && questionsData.length > 0) {
+      const loadedQuizzes = buildQuizzes(questionsData);
+      questionsDB = loadedQuizzes.length > 0 ? loadedQuizzes : buildQuizzes(fallbackQuizRows);
+      console.log("✅ 成功從 questions.js 載入題庫");
+    } else {
+      // 否則嘗試從 Google Sheet 載入
+      const response = await fetch(GOOGLE_SHEET_URL, { cache: "no-store" });
+      if (!response.ok) throw new Error(`CSV load failed: ${response.status}`);
+      const csvText = await response.text();
+      const loadedQuizzes = buildQuizzes(csvTextToObjects(csvText));
+      questionsDB = loadedQuizzes.length > 0 ? loadedQuizzes : buildQuizzes(fallbackQuizRows);
+      console.log("✅ 成功從 Google Sheet 載入題庫");
+    }
   } catch (err) {
-    console.warn("Using fallback quizzes.", err);
+    console.warn("⚠️ 無法載入外部題庫，將使用內建預設題庫。", err);
     questionsDB = buildQuizzes(fallbackQuizRows);
   }
   
   // Extract unique titles for weight configuration
   const uniqueTitles = [...new Set(questionsDB.map(q => q.title))];
   // Initialize default weights if not set (equal weight)
-  if (Object.keys(quizWeights).length === 0) {
-    uniqueTitles.forEach(t => quizWeights[t] = 100 / uniqueTitles.length);
+  if (typeof quizWeights === 'undefined') {
+    window.quizWeights = {};
+  }
+  if (Object.keys(window.quizWeights || {}).length === 0) {
+    uniqueTitles.forEach(t => window.quizWeights[t] = 100 / uniqueTitles.length);
   }
   
   window.uniqueQuizTitles = uniqueTitles;
